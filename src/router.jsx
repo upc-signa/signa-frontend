@@ -13,10 +13,7 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
-      },
-      // 🔹 Ejemplo: agregar nuevas rutas aquí
-      // { path: "login", element: <Login /> },
-      // { path: "dashboard", element: <Dashboard /> },
+      }
     ],
   },
 ]);
