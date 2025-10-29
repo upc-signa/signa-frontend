@@ -1,17 +1,92 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import AuthBanner from '../components/AuthBanner';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { authService } from '../services/api/auth.service';
+import { toast } from 'react-toastify';
         
-
 export default function Login() {
-  const [usuario, setUsuario] = useState('');
-  const [contrasena, setContrasena] = useState('');
-  const [mostrarContrasena, setMostrarContrasena] = useState(false);
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = () => {
-    console.log('Login:', { usuario, contrasena });
-    // Aquí agregarías tu lógica de autenticación
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateFields = () => {
+    const trimmedEmail = email.trim();
+    
+    if (!trimmedEmail || !password) {
+      const missingFields = [];
+      if (!trimmedEmail) missingFields.push('Email');
+      if (!password) missingFields.push('Password');
+      return { isValid: false, missingFields };
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setError('Please enter a valid email address');
+      return { isValid: false };
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return { isValid: false };
+    }
+
+    return { isValid: true };
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setError('');
+      
+      const validation = validateFields();
+      if (!validation.isValid) {
+        if (validation.missingFields) {
+          toast.error(
+            <div>
+              <p>Please fill in all required fields:</p>
+              <ul className="list-disc pl-4 mt-2">
+                {validation.missingFields.map(field => (
+                  <li key={field}>{field}</li>
+                ))}
+              </ul>
+            </div>,
+            {
+              position: "top-right",
+              autoClose: 5000
+            }
+          );
+        }
+        return;
+      }
+
+      const response = await authService.login({ 
+        email: email.trim(), 
+        password 
+      });
+      localStorage.setItem('token', response.token);
+      navigate('/'); // Redirect to home after successful login
+    } catch (error) {
+      if (error.response?.status === 409) {
+        // Email not verified, redirect to verification page
+        toast.info('Please verify your email address to continue');
+        navigate('/verification-code', { 
+          state: { 
+            email: email.trim(),
+            purpose: 'email'
+          } 
+        });
+      } else {
+        const errorMessage = error.response?.data?.message || 'An error occurred during login';
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -23,46 +98,52 @@ export default function Login() {
   return (
     <div className="w-screen min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full h-min max-w-[1024px] flex shadow-2xl rounded-2xl overflow-hidden bg-white text-gray-600">
-        {/* Sección izquierda - Formulario */}
+        {/* Left section - Form */}
         <div className="w-[min(500px,100%)] p-12 lg:p-16 flex flex-col justify-center">
           <h1 className="text-4xl font-bold text-orange-500 mb-12">
             ¡Bienvenido!
           </h1>
           
           <div className="space-y-8">
-            {/* Campo Usuario */}
+            {error && (
+              <div className="text-red-500 text-sm bg-red-50 p-3 rounded mb-4">
+                {error}
+              </div>
+            )}
+
+            {/* Email field */}
             <div>
               <label className="block text-orange-400 text-sm font-medium mb-3">
-                USUARIO
+                EMAIL
               </label>
               <input
-                type="text"
-                value={usuario}
-                onChange={(e) => setUsuario(e.target.value)}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="w-full px-0 py-3 border-b-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors"
               />
             </div>
 
-            {/* Campo Contraseña */}
+            {/* Password field */}
             <div>
               <label className="block text-orange-400 text-sm font-medium mb-3">
-                CONTRASEÑA
+                PASSWORD
               </label>
               <div className="relative">
                 <input
-                  type={mostrarContrasena ? "text" : "password"}
-                  value={contrasena}
-                  onChange={(e) => setContrasena(e.target.value)}
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   onKeyPress={handleKeyPress}
                   className="w-full px-0 py-3 pr-10 border-b-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors"
                 />
                 <button
                   type="button"
-                  onClick={() => setMostrarContrasena(!mostrarContrasena)}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 !bg-transparent !border-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 !bg-transparent"
                 >
-                  {mostrarContrasena ? (
+                  {showPassword ? (
                     <EyeOff size={20} />
                   ) : (
                     <Eye size={20} />
@@ -71,37 +152,36 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Link olvidé contraseña */}
-            <div className="">
+            {/* Forgot password link */}
+            <div>
               <Link 
                 to="/recover-password" 
-                className="text-sm !text-black hover:!text-gray-600"
+                className="text-sm text-black hover:text-gray-600"
               >
-                He olvidado la contraseña <i className="pi pi-arrow-right pl-1"></i>
+                I forgot my password <i className="pi pi-arrow-right pl-1"></i>
               </Link>
             </div>
 
-            {/* Botón Iniciar Sesión */}
+            {/* Login button */}
             <button
               onClick={handleSubmit}
               className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-4 px-6 rounded-lg transition-colors shadow-md"
             >
-              Iniciar sesión
+              Log in
             </button>
 
-            <div className="text-gray-500 text-sm">¿No tienes una cuenta? 
+            <div className="text-gray-500 text-sm">Don't have an account? 
               <Link 
                 to="/register" 
-                className="!underline pl-1"
+                className="underline pl-1"
               >
-                Regístrate
-            </Link>
+                Sign up
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Sección derecha - Ilustración */}
-        
+        {/* Right section - Banner */}
         <div className="w-full hidden md:block">
           <AuthBanner />
           {/* <img

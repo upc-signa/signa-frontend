@@ -7,6 +7,7 @@ import Login from "./pages/LogIn";
 import Register from "./pages/Register";
 import RecoverPassword from "./pages/RecoverPassword";
 import VerificationCode from "./pages/VerificationCode";
+import ChangePassword from "./pages/ChangePassword";
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,9 @@ const router = createBrowserRouter([
       },
       {
         path: "verification-code", element: <VerificationCode />
+      },
+      {
+        path: "/change-password", element: <ChangePassword />
       }
     ],
   },
