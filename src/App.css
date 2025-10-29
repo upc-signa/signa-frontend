@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import 'primeicons/primeicons.css';
-
+@import 'react-toastify/dist/ReactToastify.css';
 
 #root {
   max-width: 1980px;
