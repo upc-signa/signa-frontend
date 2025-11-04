@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { authService } from '../services/api/auth.service';
+import { authService } from '../../services/api/auth.service';
 import { toast } from 'react-toastify';
 
 export default function ChangePassword() {
@@ -41,17 +41,17 @@ export default function ChangePassword() {
 
     try {
       if (!newPassword || !confirmPassword) {
-        setError('Please fill in all fields');
+        setError('Por favor completa todos los campos');
         return;
       }
 
       if (newPassword !== confirmPassword) {
-        setError('Passwords do not match');
+        setError('Las contraseñas no coinciden');
         return;
       }
 
       if (!Object.values(validations).every(v => v)) {
-        setError('Password does not meet all requirements');
+        setError('La contraseña no cumple con todos los requisitos');
         return;
       }
 
@@ -61,15 +61,15 @@ export default function ChangePassword() {
         newPassword
       });
 
-      toast.success('Password changed successfully');
+      toast.success('Contraseña cambiada exitosamente');
       // Redirect to login with success message
       navigate('/login', { 
-        state: { message: 'Password has been changed successfully. Please login with your new password.' }
+        state: { message: 'La contraseña ha sido cambiada exitosamente. Por favor inicia sesión con tu nueva contraseña.' }
       });
     } catch (err) {
-      const message = err.response?.data?.message || 'Error changing password. Please try again.';
-      setError(message);
-      toast.error(message);
+      const errorMessage = err.response?.data?.message || 'Error al cambiar la contraseña';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -83,7 +83,7 @@ export default function ChangePassword() {
     <div className="w-screen min-h-screen flex items-center justify-center bg-gray-50 text-gray-600 px-4">
       <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl p-10">
         <h1 className="!text-4xl font-bold text-orange-500 mb-10">
-          New Password
+          Nueva Contraseña
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -96,7 +96,7 @@ export default function ChangePassword() {
           {/* New Password */}
           <div>
             <label className="block text-orange-500 text-sm font-medium mb-3 uppercase">
-              New Password
+              Nueva Contraseña
             </label>
             <div className="relative">
               <input
@@ -120,28 +120,28 @@ export default function ChangePassword() {
                 <div className={`w-4 h-4 flex items-center justify-center border-2 rounded ${validations.length ? 'bg-black border-black' : 'border-gray-400'}`}>
                   {validations.length && <Check size={12} className="text-white" />}
                 </div>
-                <span>12 Characters</span>
+                <span>12 Caracteres</span>
               </div>
 
               <div className={`flex items-center gap-2 text-sm ${validations.special ? 'text-green-600' : 'text-gray-600'}`}>
                 <div className={`w-4 h-4 flex items-center justify-center border-2 rounded ${validations.special ? 'bg-black border-black' : 'border-gray-400'}`}>
                   {validations.special && <Check size={12} className="text-white" />}
                 </div>
-                <span>1 Special Character (Ex: # $ % & / )</span>
+                <span>1 Caracter Especial (Ej: # $ % & / )</span>
               </div>
 
               <div className={`flex items-center gap-2 text-sm ${validations.number ? 'text-green-600' : 'text-gray-600'}`}>
                 <div className={`w-4 h-4 flex items-center justify-center border-2 rounded ${validations.number ? 'bg-black border-black' : 'border-gray-400'}`}>
                   {validations.number && <Check size={12} className="text-white" />}
                 </div>
-                <span>1 Numeric Character</span>
+                <span>1 Número</span>
               </div>
 
               <div className={`flex items-center gap-2 text-sm ${validations.uppercase ? 'text-green-600' : 'text-gray-600'}`}>
                 <div className={`w-4 h-4 flex items-center justify-center border-2 rounded ${validations.uppercase ? 'bg-black border-black' : 'border-gray-400'}`}>
                   {validations.uppercase && <Check size={12} className="text-white" />}
                 </div>
-                <span>1 Uppercase Character</span>
+                <span>1 Letra Mayúscula</span>
               </div>
             </div>
           </div>
@@ -149,7 +149,7 @@ export default function ChangePassword() {
           {/* Confirm Password */}
           <div>
             <label className="block text-orange-500 text-sm font-medium mb-3 uppercase">
-              Confirm Password
+              Confirmar Contraseña
             </label>
             <div className="relative">
               <input
@@ -176,7 +176,7 @@ export default function ChangePassword() {
               isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
             }`}
           >
-            {isSubmitting ? 'Changing Password...' : 'Change Password'}
+            {isSubmitting ? 'Cambiando Contraseña...' : 'Cambiar Contraseña'}
           </button>
         </form>
       </div>
