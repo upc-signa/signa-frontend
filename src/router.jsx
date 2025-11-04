@@ -10,36 +10,42 @@ import VerificationCode from "./pages/VerificationCode";
 import ChangePassword from "./pages/ChangePassword";
 import { AuthGuard, PublicGuard } from "./guards/auth.guard";
 
+import ProfileView from "./pages/profile/ProfileView";
+import ProfileEdit from "./pages/profile/ProfileEdit";
+import Plans from "./pages/plans/Plans";
+import Checkout from "./pages/plans/Checkout";
+import Settings from "./pages/settings/Settings";
+import PrivateLayout from "./layouts/PrivateLayout";
+
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     errorElement: <NotFound />,
     children: [
+      // Públicas
+      { path: "/login", element: <PublicGuard><Login /></PublicGuard> },
+      { path: "/register", element: <PublicGuard><Register /></PublicGuard> },
+      { path: "/recover-password", element: <PublicGuard><RecoverPassword /></PublicGuard> },
+      { path: "/verification-code", element: <PublicGuard><VerificationCode /></PublicGuard> },
+      { path: "/change-password", element: <PublicGuard><ChangePassword /></PublicGuard> },
+
+      // Privadas (bajo PrivateLayout)
       {
-        index: true,
-        element: <AuthGuard><Home /></AuthGuard>,
+        element: (
+          <AuthGuard>
+            <PrivateLayout />
+          </AuthGuard>
+        ),
+        children: [
+          { index: true, element: <Home /> },
+          { path: "profile", element: <ProfileView /> },
+          { path: "profile/edit", element: <ProfileEdit /> },
+          { path: "plans", element: <Plans /> },
+          { path: "checkout", element: <Checkout /> },
+          { path: "settings", element: <Settings /> },
+        ],
       },
-      {
-        path: "/login",
-        element: <PublicGuard><Login /></PublicGuard>
-      },
-      {
-        path: "/register",
-        element: <PublicGuard><Register /></PublicGuard>
-      },
-      {
-        path: "/recover-password",
-        element: <PublicGuard><RecoverPassword /></PublicGuard>
-      },
-      {
-        path: "verification-code",
-        element: <PublicGuard><VerificationCode /></PublicGuard>
-      },
-      {
-        path: "/change-password",
-        element: <PublicGuard><ChangePassword /></PublicGuard>
-      }
     ],
   },
 ]);
