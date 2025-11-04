@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 export default function TermsDialog({ isOpen, onClose }) {
   if (!isOpen) return null;
 
-  const currentDate = new Date().toLocaleDateString('en-US', {
+  const currentDate = new Date().toLocaleDateString('es-ES', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -14,7 +14,7 @@ export default function TermsDialog({ isOpen, onClose }) {
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col relative">
         {/* Header */}
         <div className="p-6 border-b flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-800">Terms and Conditions</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Términos y Condiciones</h2>
           <button 
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 transition-colors !bg-transparent !border-none focus:!outline-none"
@@ -26,55 +26,55 @@ export default function TermsDialog({ isOpen, onClose }) {
         {/* Content - Scrollable */}
         <div className="p-6 overflow-y-auto">
           <div className="prose prose-gray max-w-none">
-            <p className="text-sm text-gray-500 mb-4">Last updated: {currentDate}</p>
+            <p className="text-sm text-gray-500 mb-4">Última actualización: {currentDate}</p>
             
             <p className="mb-6">
-              Welcome to our video call platform. By registering, accessing, or using our services, 
-              you agree to the following Terms and Conditions. Please read them carefully before using the platform.
+              Bienvenido a nuestra plataforma de videollamadas. Al registrarte, acceder o utilizar nuestros servicios, 
+              aceptas los siguientes Términos y Condiciones. Por favor, léelos detenidamente antes de usar la plataforma.
             </p>
 
-            <h3 className="text-lg font-semibold mb-2">1. Acceptance of Terms</h3>
+            <h3 className="text-lg font-semibold mb-2">1. Aceptación de Términos</h3>
             <p className="mb-4">
-              By creating an account or using the platform, you confirm that you have read and accepted these 
-              Terms and Conditions, as well as our Privacy Policy. If you disagree, you should not use the service.
+              Al crear una cuenta o utilizar la plataforma, confirmas que has leído y aceptado estos 
+              Términos y Condiciones, así como nuestra Política de Privacidad. Si no estás de acuerdo, no debes utilizar el servicio.
             </p>
 
-            <h3 className="text-lg font-semibold mb-2">2. User Registration and Account</h3>
+            <h3 className="text-lg font-semibold mb-2">2. Registro de Usuario y Cuenta</h3>
             <ul className="list-disc pl-5 mb-4">
-              <li>Registration with truthful and up-to-date information is required for video calls.</li>
-              <li>You are responsible for maintaining the confidentiality of your credentials.</li>
-              <li>The use of fake accounts or unauthorized third-party accounts is not permitted.</li>
+              <li>Se requiere registro con información veraz y actualizada para las videollamadas.</li>
+              <li>Eres responsable de mantener la confidencialidad de tus credenciales.</li>
+              <li>No está permitido el uso de cuentas falsas o cuentas de terceros no autorizadas.</li>
             </ul>
 
-            <h3 className="text-lg font-semibold mb-2">3. Permitted Platform Usage</h3>
+            <h3 className="text-lg font-semibold mb-2">3. Uso Permitido de la Plataforma</h3>
             <ul className="list-disc pl-5 mb-4">
-              <li>The platform must be used only for legal and respectful purposes.</li>
-              <li>Recording, distributing, or sharing video calls without participants' consent is prohibited.</li>
-              <li>Using the platform for illegal, offensive activities or infringing third-party rights is not allowed.</li>
+              <li>La plataforma debe ser utilizada únicamente para fines legales y respetuosos.</li>
+              <li>Está prohibido grabar, distribuir o compartir videollamadas sin el consentimiento de los participantes.</li>
+              <li>No está permitido usar la plataforma para actividades ilegales, ofensivas o que infrinjan derechos de terceros.</li>
             </ul>
 
-            <h3 className="text-lg font-semibold mb-2">4. User Responsibility</h3>
+            <h3 className="text-lg font-semibold mb-2">4. Responsabilidad del Usuario</h3>
             <ul className="list-disc pl-5 mb-4">
-              <li>Users are responsible for the content they share during video calls.</li>
-              <li>The company is not responsible for other users' conduct or the content they share.</li>
+              <li>Los usuarios son responsables del contenido que comparten durante las videollamadas.</li>
+              <li>La empresa no es responsable de la conducta de otros usuarios ni del contenido que compartan.</li>
             </ul>
 
-            <h3 className="text-lg font-semibold mb-2">5. Liability Limitation</h3>
+            <h3 className="text-lg font-semibold mb-2">5. Limitación de Responsabilidad</h3>
             <ul className="list-disc pl-5 mb-4">
-              <li>The service is provided "as is" and we do not guarantee uninterrupted availability.</li>
-              <li>We assume no responsibility for technical interruptions, data loss, or problems arising from service use.</li>
+              <li>El servicio se proporciona "tal cual" y no garantizamos su disponibilidad ininterrumpida.</li>
+              <li>No asumimos responsabilidad por interrupciones técnicas, pérdida de datos o problemas derivados del uso del servicio.</li>
             </ul>
 
-            <h3 className="text-lg font-semibold mb-2">6. Service Modifications</h3>
+            <h3 className="text-lg font-semibold mb-2">6. Modificaciones del Servicio</h3>
             <p className="mb-4">
-              We may update, modify, or partially or totally suspend the platform at any time, 
-              notifying users in advance when possible.
+              Podemos actualizar, modificar o suspender parcial o totalmente la plataforma en cualquier momento, 
+              notificando a los usuarios con anticipación cuando sea posible.
             </p>
 
-            <h3 className="text-lg font-semibold mb-2">7. Applicable Legislation</h3>
+            <h3 className="text-lg font-semibold mb-2">7. Legislación Aplicable</h3>
             <p className="mb-4">
-              These Terms and Conditions are governed by the laws of Peru. Any disputes will be resolved 
-              in the competent courts of this jurisdiction.
+              Estos Términos y Condiciones se rigen por las leyes de Perú. Cualquier disputa será resuelta 
+              en los tribunales competentes de esta jurisdicción.
             </p>
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function TermsDialog({ isOpen, onClose }) {
             onClick={onClose}
             className="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium py-3 px-6 rounded-lg transition-colors"
           >
-            I Understand
+            Entiendo
           </button>
         </div>
       </div>

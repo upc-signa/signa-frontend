@@ -2,12 +2,12 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App";
 import Home from "./pages/Home";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/LogIn";
-import Register from "./pages/Register";
-import RecoverPassword from "./pages/RecoverPassword";
-import VerificationCode from "./pages/VerificationCode";
-import ChangePassword from "./pages/ChangePassword";
+import NotFound from "./pages/auth/NotFound";
+import Login from "./pages/auth/LogIn";
+import Register from "./pages/auth/Register";
+import RecoverPassword from "./pages/auth/RecoverPassword";
+import VerificationCode from "./pages/auth/VerificationCode";
+import ChangePassword from "./pages/auth/ChangePassword";
 import { AuthGuard, PublicGuard } from "./guards/auth.guard";
 
 import ProfileView from "./pages/profile/ProfileView";

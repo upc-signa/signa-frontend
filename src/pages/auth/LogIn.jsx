@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import AuthBanner from '../components/AuthBanner';
+import AuthBanner from '../../components/AuthBanner';
 import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '../services/api/auth.service';
+import { authService } from '../../services/api/auth.service';
 import { toast } from 'react-toastify';
         
 export default function Login() {
@@ -22,18 +22,18 @@ export default function Login() {
     
     if (!trimmedEmail || !password) {
       const missingFields = [];
-      if (!trimmedEmail) missingFields.push('Email');
-      if (!password) missingFields.push('Password');
+      if (!trimmedEmail) missingFields.push('Correo');
+      if (!password) missingFields.push('Contraseña');
       return { isValid: false, missingFields };
     }
 
     if (!isValidEmail(trimmedEmail)) {
-      setError('Please enter a valid email address');
+      setError('Por favor ingresa un correo electrónico válido');
       return { isValid: false };
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      setError('La contraseña debe tener al menos 8 caracteres');
       return { isValid: false };
     }
 
@@ -49,7 +49,7 @@ export default function Login() {
         if (validation.missingFields) {
           toast.error(
             <div>
-              <p>Please fill in all required fields:</p>
+              <p>Por favor completa todos los campos requeridos:</p>
               <ul className="list-disc pl-4 mt-2">
                 {validation.missingFields.map(field => (
                   <li key={field}>{field}</li>
@@ -74,7 +74,7 @@ export default function Login() {
     } catch (error) {
       if (error.response?.status === 409) {
         // Email not verified, redirect to verification page
-        toast.info('Please verify your email address to continue');
+        toast.info('Por favor verifica tu correo electrónico para continuar');
         navigate('/verification-code', { 
           state: { 
             email: email.trim(),
@@ -82,7 +82,7 @@ export default function Login() {
           } 
         });
       } else {
-        const errorMessage = error.response?.data?.message || 'An error occurred during login';
+        const errorMessage = error.response?.data?.message || 'Ocurrió un error durante el inicio de sesión';
         setError(errorMessage);
         toast.error(errorMessage);
       }
@@ -114,7 +114,7 @@ export default function Login() {
             {/* Email field */}
             <div>
               <label className="block text-orange-400 text-sm font-medium mb-3">
-                EMAIL
+                CORREO ELECTRÓNICO
               </label>
               <input
                 type="email"
@@ -128,7 +128,7 @@ export default function Login() {
             {/* Password field */}
             <div>
               <label className="block text-orange-400 text-sm font-medium mb-3">
-                PASSWORD
+                CONTRASEÑA
               </label>
               <div className="relative">
                 <input
@@ -158,7 +158,7 @@ export default function Login() {
                 to="/recover-password" 
                 className="text-sm text-black hover:text-gray-600"
               >
-                I forgot my password <i className="pi pi-arrow-right pl-1"></i>
+                Olvidé mi contraseña <i className="pi pi-arrow-right pl-1"></i>
               </Link>
             </div>
 
@@ -167,15 +167,15 @@ export default function Login() {
               onClick={handleSubmit}
               className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-4 px-6 rounded-lg transition-colors shadow-md"
             >
-              Log in
+              Iniciar sesión
             </button>
 
-            <div className="text-gray-500 text-sm">Don't have an account? 
+            <div className="text-gray-500 text-sm">¿No tienes una cuenta? 
               <Link 
                 to="/register" 
                 className="underline pl-1"
               >
-                Sign up
+                Regístrate
               </Link>
             </div>
           </div>
