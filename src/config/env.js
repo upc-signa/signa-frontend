@@ -1,3 +1,3 @@
 export const env = {
-    API_URL: 'http://localhost:8080/api/v1/profiles',
+    API_URL: 'https://signa.py.net.pe/api/v1',
 };

@@ -5,7 +5,7 @@ import { authService } from '../services/api/auth.service';
 export default function VerificationCode() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [code, setCode] = useState(['', '', '', '', '']);
   const [error, setError] = useState('');
   const email = location.state?.email || '';
   const [purpose] = useState(location.state?.purpose || 'email'); // 'email' or 'reset'
@@ -45,18 +45,18 @@ export default function VerificationCode() {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text').trim();
     
-    if (/^\d{6}$/.test(pastedData)) {
+    if (/^\d{5}$/.test(pastedData)) {
       const newCode = pastedData.split('');
       setCode(newCode);
-      inputsRef.current[5]?.focus();
+      inputsRef.current[4]?.focus();
     }
   };
 
   const handleContinue = async () => {
     const completeCode = code.join('');
     
-    if (completeCode.length !== 6) {
-      setError('Please enter the complete 6-digit code');
+    if (completeCode.length !== 5) {
+      setError('Please enter the complete 5-digit code');
       return;
     }
 
@@ -97,8 +97,8 @@ export default function VerificationCode() {
         
         <p className="text-orange-500 text-sm mb-8">
           {purpose === 'reset' 
-            ? 'Enter the 6-digit code to reset your password'
-            : 'with a 6-digit code, please enter the code below'
+            ? 'Enter the 5-digit code to reset your password'
+            : 'with a 5-digit code, please enter the code below'
           }
         </p>
 

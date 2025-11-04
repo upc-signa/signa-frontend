@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import RecoverPassword from "./pages/RecoverPassword";
 import VerificationCode from "./pages/VerificationCode";
 import ChangePassword from "./pages/ChangePassword";
+import { AuthGuard, PublicGuard } from "./guards/auth.guard";
 
 const router = createBrowserRouter([
   {
@@ -17,22 +18,27 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />,
+        element: <AuthGuard><Home /></AuthGuard>,
       },
       {
-        path: "/login", element: <Login />
+        path: "/login",
+        element: <PublicGuard><Login /></PublicGuard>
       },
       {
-        path: "/register", element: <Register />
+        path: "/register",
+        element: <PublicGuard><Register /></PublicGuard>
       },
       {
-        path: "/recover-password", element: <RecoverPassword />
+        path: "/recover-password",
+        element: <PublicGuard><RecoverPassword /></PublicGuard>
       },
       {
-        path: "verification-code", element: <VerificationCode />
+        path: "verification-code",
+        element: <PublicGuard><VerificationCode /></PublicGuard>
       },
       {
-        path: "/change-password", element: <ChangePassword />
+        path: "/change-password",
+        element: <PublicGuard><ChangePassword /></PublicGuard>
       }
     ],
   },
