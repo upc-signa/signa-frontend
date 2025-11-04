@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '../services/api/auth.service';
+import { authService } from '../../services/api/auth.service';
 
 export default function RecoverPassword() {
   const navigate = useNavigate();
@@ -9,14 +9,14 @@ export default function RecoverPassword() {
 
   const handleSubmit = async () => {
     if (!email) {
-      setStatus({ type: 'error', message: 'Please enter your email address' });
+      setStatus({ type: 'error', message: 'Por favor ingresa tu correo electrónico' });
       return;
     }
     
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setStatus({ type: 'error', message: 'Please enter a valid email address' });
+      setStatus({ type: 'error', message: 'Por favor ingresa un correo electrónico válido' });
       return;
     }
     
@@ -24,7 +24,7 @@ export default function RecoverPassword() {
       await authService.requestPasswordReset(email);
       setStatus({
         type: 'success',
-        message: 'Verification code has been sent to your email'
+        message: 'Se ha enviado un código de verificación a tu correo'
       });
       // Redirect to verification code page for password reset
       navigate('/verification-code', { 
@@ -36,7 +36,7 @@ export default function RecoverPassword() {
     } catch (error) {
       setStatus({
         type: 'error',
-        message: error.response?.data?.message || 'An error occurred while sending the verification code'
+        message: error.response?.data?.message || 'Ocurrió un error al enviar el código de verificación'
       });
     }
   };
@@ -51,11 +51,11 @@ export default function RecoverPassword() {
     <div className="w-screen min-h-screen flex items-center justify-center bg-gray-50 text-gray-600 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
         <h1 className="!text-3xl font-bold text-orange-500 text-center mb-3">
-          Recover Password
+          Recuperar Contraseña
         </h1>
         
         <p className="text-gray-600 text-center text-sm mb-8">
-          Enter your email address and we'll send you a verification code to reset your password
+          Ingresa tu correo electrónico y te enviaremos un código de verificación para restablecer tu contraseña
         </p>
 
         {status.message && (
@@ -68,7 +68,7 @@ export default function RecoverPassword() {
 
         <div className="mb-8">
           <label className="block text-gray-500 text-sm mb-3">
-            Email address
+            Correo electrónico
           </label>
           <input
             type="email"
@@ -84,14 +84,14 @@ export default function RecoverPassword() {
           onClick={handleSubmit}
           className="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium py-4 px-6 rounded-lg transition-colors shadow-md mb-4"
         >
-          Send Code
+          Enviar Código
         </button>
 
         <div className="text-center">
           <Link 
             to="/login"
             className="text-sm">
-            Back to login
+            Volver a inicio de sesión
           </Link>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { authService } from '../services/api/auth.service';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { authService } from '../../services/api/auth.service';
 
 export default function VerificationCode() {
   const navigate = useNavigate();
@@ -56,7 +56,7 @@ export default function VerificationCode() {
     const completeCode = code.join('');
     
     if (completeCode.length !== 5) {
-      setError('Please enter the complete 5-digit code');
+      setError('Por favor ingresa el código completo de 5 dígitos');
       return;
     }
 
@@ -80,7 +80,7 @@ export default function VerificationCode() {
         navigate('/login', { state: { verified: true } });
       }
     } catch (error) {
-      setError(error.response?.data?.message || 'Invalid verification code');
+      setError(error.response?.data?.message || 'Código de verificación inválido');
     }
   };
 
@@ -88,7 +88,7 @@ export default function VerificationCode() {
     <div className="w-screen min-h-screen flex items-center justify-center bg-gray-50 text-gray-600 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
         <h1 className="!text-2xl font-bold text-orange-500 mb-4">
-          We've sent an email to
+          Hemos enviado un correo a
         </h1>
         
         <p className="text-gray-800 font-medium text-lg mb-6">
@@ -97,8 +97,8 @@ export default function VerificationCode() {
         
         <p className="text-orange-500 text-sm mb-8">
           {purpose === 'reset' 
-            ? 'Enter the 5-digit code to reset your password'
-            : 'with a 5-digit code, please enter the code below'
+            ? 'Ingresa el código de 5 dígitos para restablecer tu contraseña'
+            : 'con un código de 5 dígitos, por favor ingrésalo a continuación'
           }
         </p>
 
@@ -129,10 +129,18 @@ export default function VerificationCode() {
         {/* Continue button */}
         <button
           onClick={handleContinue}
-          className="bg-gray-700 hover:bg-gray-800 text-white font-medium py-3 px-12 rounded-lg transition-colors shadow-md"
+          className="bg-gray-700 hover:bg-gray-800 text-white font-medium py-3 px-12 rounded-lg transition-colors shadow-md mb-4"
         >
-          {purpose === 'reset' ? 'Reset Password' : 'Verify Email'}
+          {purpose === 'reset' ? 'Restablecer Contraseña' : 'Verificar Correo'}
         </button>
+
+        <div className="text-center">
+          <Link 
+            to="/login"
+            className="text-sm">
+            Volver a inicio de sesión
+          </Link>
+        </div>
       </div>
     </div>
   );

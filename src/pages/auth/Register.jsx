@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Calendar } from 'lucide-react';
-import AuthBanner from '../components/AuthBanner';
+import AuthBanner from '../../components/AuthBanner';
 import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '../services/api/auth.service';
-import TermsDialog from '../components/TermsDialog';
+import { authService } from '../../services/api/auth.service';
+import TermsDialog from '../../components/TermsDialog';
 import { toast } from 'react-toastify';
 
 export default function Register() {
@@ -34,13 +34,13 @@ export default function Register() {
   const checkMissingFields = () => {
     const missingFields = [];
     
-    if (!formData.firstName.trim()) missingFields.push('First Name');
-    if (!formData.lastName.trim()) missingFields.push('Last Name');
-    if (!formData.birthDate) missingFields.push('Birth Date');
-    if (!formData.email.trim()) missingFields.push('Email');
-    if (!formData.password) missingFields.push('Password');
-    if (!formData.confirmPassword) missingFields.push('Confirm Password');
-    if (!acceptTerms) missingFields.push('Terms and Conditions acceptance');
+    if (!formData.firstName.trim()) missingFields.push('Nombre');
+    if (!formData.lastName.trim()) missingFields.push('Apellidos');
+    if (!formData.birthDate) missingFields.push('Fecha de nacimiento');
+    if (!formData.email.trim()) missingFields.push('Correo electrónico');
+    if (!formData.password) missingFields.push('Contraseña');
+    if (!formData.confirmPassword) missingFields.push('Confirmar contraseña');
+    if (!acceptTerms) missingFields.push('Aceptación de Términos y Condiciones');
     
     return missingFields;
   };
@@ -53,7 +53,7 @@ export default function Register() {
       if (missingFields.length > 0) {
         toast.error(
           <div>
-            <p>Please fill in all required fields:</p>
+            <p>Por favor completa todos los campos requeridos:</p>
             <ul className="list-disc pl-4 mt-2">
               {missingFields.map(field => (
                 <li key={field}>{field}</li>
@@ -69,7 +69,7 @@ export default function Register() {
       }
       
       if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
+        setError('Las contraseñas no coinciden');
         return;
       }
 
@@ -90,7 +90,7 @@ export default function Register() {
         } 
       });
     } catch (error) {
-      setError(error.response?.data?.message || 'An error occurred during registration');
+      setError(error.response?.data?.message || 'Ocurrió un error durante el registro');
     }
   };
 
@@ -98,7 +98,7 @@ export default function Register() {
     <div className="w-screen h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-gray-600">
         <h1 className="text-4xl font-bold text-orange-500 text-center mb-8">
-          Sign Up
+          Registro
         </h1>
 
         <div className="space-y-6">
@@ -111,7 +111,7 @@ export default function Register() {
           {/* First Name */}
           <div>
             <label className="block text-gray-500 text-sm mb-2">
-              First Name
+              Nombre
             </label>
             <input
               type="text"
@@ -119,14 +119,14 @@ export default function Register() {
               value={formData.firstName}
               onChange={handleChange}
               className="w-full px-0 py-2 border-b-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors"
-              placeholder="John"
+              placeholder="Juan"
             />
           </div>
 
           {/* Last Name */}
           <div>
             <label className="block text-gray-500 text-sm mb-2">
-              Last Name
+              Apellidos
             </label>
             <input
               type="text"
@@ -134,14 +134,14 @@ export default function Register() {
               value={formData.lastName}
               onChange={handleChange}
               className="w-full px-0 py-2 border-b-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors"
-              placeholder="Smith"
+              placeholder="Pérez"
             />
           </div>
 
           {/* Birth Date */}
           <div>
             <label className="block text-gray-500 text-sm mb-2">
-              Birth Date
+              Fecha de nacimiento
             </label>
             <div className="relative">
               <input
@@ -161,7 +161,7 @@ export default function Register() {
           {/* Email */}
           <div>
             <label className="block text-gray-500 text-sm mb-2">
-              Email
+              Correo electrónico
             </label>
             <input
               type="email"
@@ -169,14 +169,14 @@ export default function Register() {
               value={formData.email}
               onChange={handleChange}
               className="w-full px-0 py-2 border-b-2 border-gray-300 focus:border-orange-500 focus:outline-none transition-colors"
-              placeholder="john.smith@example.com"
+              placeholder="juan.perez@ejemplo.com"
             />
           </div>
 
           {/* Password */}
           <div>
             <label className="block text-gray-500 text-sm mb-2">
-              Password
+              Contraseña
             </label>
             <div className="relative">
               <input
@@ -199,7 +199,7 @@ export default function Register() {
           {/* Confirm Password */}
           <div>
             <label className="block text-gray-500 text-sm mb-2">
-              Confirm Password
+              Confirmar contraseña
             </label>
             <div className="relative">
               <input
@@ -229,13 +229,13 @@ export default function Register() {
               className="mt-1 w-5 h-5 text-orange-500 border-2 border-gray-300 rounded focus:ring-orange-500"
             />
             <label className="text-sm text-gray-700">
-              Accept&nbsp;
+              Acepto los&nbsp;
               <button
                 type="button"
                 onClick={() => setShowTerms(true)}
                 className="text-orange-500 hover:text-orange-600 underline focus:!outline-none !bg-transparent !border-none !p-0"
               >
-                Terms and Conditions
+                Términos y Condiciones
               </button>
             </label>
           </div>
@@ -251,15 +251,15 @@ export default function Register() {
             onClick={handleSubmit}
             className="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium py-4 px-6 rounded-lg transition-colors shadow-md"
           >
-            Create Account
+            Crear Cuenta
           </button>
 
-          <div className="text-gray-500 text-sm">Already have an account?
+          <div className="text-gray-500 text-sm">¿Ya tienes una cuenta?
               <Link 
                 to="/login" 
                 className="underline pl-1"
               >
-                Log in
+                Inicia sesión
               </Link>
           </div>
         </div>
