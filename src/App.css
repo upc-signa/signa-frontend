@@ -1,9 +1,75 @@
+@config "../tailwind.config.js";
 @import "tailwindcss";
 @import 'primeicons/primeicons.css';
 @import 'react-toastify/dist/ReactToastify.css';
 
-#root {
-  max-width: 1980px;
-  margin: 0 auto;
+.card {
+  @apply rounded-2xl shadow-md p-6 sm:p-8 
+         bg-white text-zinc-900 
+         dark:bg-zinc-900 dark:text-zinc-100
+         border border-zinc-200 dark:border-zinc-800;
 }
 
+.input {
+  @apply w-full rounded-md px-3 py-2 border border-zinc-300 bg-gray-50
+         dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100;
+}
+
+.muted {
+  @apply text-zinc-600 dark:text-zinc-400;
+}
+
+.divider {
+  @apply my-8 border-zinc-200 dark:border-zinc-800;
+}
+
+.select {
+  @apply w-48 border-b border-zinc-300 dark:border-zinc-700 
+         focus:border-orange-500 outline-none py-2 
+         bg-transparent text-zinc-900 dark:text-zinc-100
+         transition-colors duration-200;
+}
+
+.input-underline {
+  @apply w-full bg-transparent text-zinc-900 dark:text-zinc-100
+         border-0 border-b border-zinc-300 dark:border-zinc-700
+         focus:border-orange-500 outline-none py-2 transition-colors;
+}
+
+.select-underline {
+  @apply w-48 bg-transparent text-zinc-900 dark:text-zinc-100
+         border-0 border-b border-zinc-300 dark:border-zinc-700
+         focus:border-orange-500 outline-none py-2 transition-colors;
+}
+
+.avatar-box {
+  @apply w-60 h-60 bg-zinc-100 dark:bg-zinc-800
+         border border-zinc-200 dark:border-zinc-700
+         rounded-xl grid place-items-center text-zinc-400;
+}
+.border-soft {
+  @apply border-zinc-300 dark:border-zinc-800;
+}
+
+hr {
+  @apply border-zinc-300 dark:border-zinc-800;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-md px-4 py-2
+         font-semibold text-white bg-orange-500 hover:bg-orange-600
+         disabled:opacity-60 disabled:cursor-not-allowed
+         focus:outline-none focus-visible:ring-2
+         focus-visible:ring-orange-500 focus-visible:ring-offset-2
+         dark:focus-visible:ring-offset-zinc-900;
+}
+
+select option {
+  color: #000;
+  background-color: #fff;
+}
+
+.dark select option {
+  color: #fff;
+  background-color: #1a1a1a;
+}

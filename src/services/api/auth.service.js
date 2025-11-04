@@ -19,5 +19,9 @@ export const authService = {
 
     resetPassword: async (resetData) => {
         return baseService.post('/auth/change-password', resetData);
+    },
+    logout: () => {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
     }
 };
