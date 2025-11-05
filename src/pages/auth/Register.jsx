@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff, Calendar } from 'lucide-react';
+import { Eye, EyeOff, Calendar, Check } from 'lucide-react';
 import AuthBanner from '../../components/AuthBanner';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/api/auth.service';
@@ -22,6 +22,14 @@ export default function Register() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState('');
   const [showTerms, setShowTerms] = useState(false);
+
+  // Password validations
+  const validations = {
+    length: formData.password.length >= 12,
+    special: /[#$%&/]/.test(formData.password),
+    number: /\d/.test(formData.password),
+    uppercase: /[A-Z]/.test(formData.password)
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -95,7 +103,7 @@ export default function Register() {
   };
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div className="w-screen h-screen flex items-center justify-center bg-gray-50 py-12 px-4 overflow-x-hidden">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-gray-600">
         <h1 className="text-4xl font-bold text-orange-500 text-center mb-8">
           Registro
@@ -189,10 +197,41 @@ export default function Register() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 !bg-transparent"
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 p-2 rounded"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+            </div>
+
+            {/* Password Requirements */}
+            <div className="mt-4 space-y-2">
+              <div className={`flex items-center gap-2 text-sm ${validations.length ? 'text-green-600' : 'text-gray-600'}`}>
+                <div className={`w-4 h-4 flex items-center justify-center border-2 rounded ${validations.length ? 'bg-black border-black' : 'border-gray-400'}`}>
+                  {validations.length && <Check size={12} className="text-white" />}
+                </div>
+                <span>12 Caracteres</span>
+              </div>
+
+              <div className={`flex items-center gap-2 text-sm ${validations.special ? 'text-green-600' : 'text-gray-600'}`}>
+                <div className={`w-4 h-4 flex items-center justify-center border-2 rounded ${validations.special ? 'bg-black border-black' : 'border-gray-400'}`}>
+                  {validations.special && <Check size={12} className="text-white" />}
+                </div>
+                <span>1 Caracter Especial (Ej: # $ % & / )</span>
+              </div>
+
+              <div className={`flex items-center gap-2 text-sm ${validations.number ? 'text-green-600' : 'text-gray-600'}`}>
+                <div className={`w-4 h-4 flex items-center justify-center border-2 rounded ${validations.number ? 'bg-black border-black' : 'border-gray-400'}`}>
+                  {validations.number && <Check size={12} className="text-white" />}
+                </div>
+                <span>1 Número</span>
+              </div>
+
+              <div className={`flex items-center gap-2 text-sm ${validations.uppercase ? 'text-green-600' : 'text-gray-600'}`}>
+                <div className={`w-4 h-4 flex items-center justify-center border-2 rounded ${validations.uppercase ? 'bg-black border-black' : 'border-gray-400'}`}>
+                  {validations.uppercase && <Check size={12} className="text-white" />}
+                </div>
+                <span>1 Letra Mayúscula</span>
+              </div>
             </div>
           </div>
 
@@ -214,7 +253,7 @@ export default function Register() {
                 onClick={() => setShowConfirm(!showConfirm)}
                 className="absolute right-0 top-1/2 transform -translate-y-1/2 !bg-transparent"
               >
-                {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
@@ -233,7 +272,7 @@ export default function Register() {
               <button
                 type="button"
                 onClick={() => setShowTerms(true)}
-                className="text-orange-500 hover:text-orange-600 underline focus:!outline-none !bg-transparent !border-none !p-0"
+                className="text-orange-500 hover:text-orange-600 underline focus:outline-none! bg-transparent! border-none! p-0!"
               >
                 Términos y Condiciones
               </button>
