@@ -32,8 +32,8 @@ export default function Login() {
       return { isValid: false };
     }
 
-    if (password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres');
+    if (password.length < 12) {
+      setError('La contraseña debe tener al menos 12 caracteres');
       return { isValid: false };
     }
 
@@ -82,9 +82,9 @@ export default function Login() {
           } 
         });
       } else {
-        const errorMessage = error.response?.data?.message || 'Ocurrió un error durante el inicio de sesión';
+        const errorMessage = 'Credenciales inválidas';
         setError(errorMessage);
-        toast.error(errorMessage);
+        toast.error("Por favor verifica tus credenciales y vuelve a intentarlo");
       }
     }
   };
@@ -99,7 +99,7 @@ export default function Login() {
     <div className="w-screen min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full h-min max-w-[1024px] flex shadow-2xl rounded-2xl overflow-hidden bg-white text-gray-600">
         {/* Left section - Form */}
-        <div className="w-[min(500px,100%)] p-12 lg:p-16 flex flex-col justify-center">
+        <div className="w-[min(500px,100%)] p-12 flex flex-col justify-center">
           <h1 className="text-4xl font-bold text-orange-500 mb-12">
             ¡Bienvenido!
           </h1>

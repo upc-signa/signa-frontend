@@ -66,10 +66,10 @@ export default function ChangePassword() {
       navigate('/login', { 
         state: { message: 'La contraseña ha sido cambiada exitosamente. Por favor inicia sesión con tu nueva contraseña.' }
       });
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Error al cambiar la contraseña';
+    } catch {
+      const errorMessage = 'Error al cambiar la contraseña';
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error("Por favor verifica tus datos e inténtalo de nuevo");
     } finally {
       setIsSubmitting(false);
     }
