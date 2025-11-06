@@ -73,3 +73,14 @@ select option {
   color: #fff;
   background-color: #1a1a1a;
 }
+
+@layer utilities {
+  html[data-textsize="GRANDE"] .text-xs  { @apply text-base; }
+  html[data-textsize="GRANDE"] .text-sm  { @apply text-lg; }
+  html[data-textsize="GRANDE"] .text-base{ @apply text-xl; }
+  html[data-textsize="GRANDE"] .text-lg  { @apply text-2xl; }
+  html[data-textsize="GRANDE"] .text-xl  { @apply text-3xl; }
+  html[data-textsize="GRANDE"] .text-2xl { @apply text-4xl; }
+  html[data-textsize="GRANDE"] .text-3xl { @apply text-5xl; }
+  html[data-textsize="GRANDE"] .text-4xl { @apply text-6xl; }
+}
