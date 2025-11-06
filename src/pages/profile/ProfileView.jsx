@@ -44,31 +44,31 @@ export default function ProfileView() {
               <div>
                 <div className="mb-4">
                   <div className="uppercase text-xs tracking-widest text-orange-500">Usuario</div>
-                  <div className="border-b border-soft pb-1">
+                  <div className="text-sm border-b border-soft pb-1">
                     {profile.firstName} {profile.lastName}
                   </div>
                 </div>
 
                 <div className="mb-4">
                   <div className="uppercase text-xs tracking-widest text-orange-500">Contraseña</div>
-                  <div className="border-b border-soft pb-1">************</div>
+                  <div className="text-sm border-b border-soft pb-1">************</div>
                 </div>
 
                 <div className="mb-4">
                   <div className="uppercase text-xs tracking-widest text-orange-500">Fecha de nacimiento</div>
-                  <div className="border-b border-soft pb-1">{profile.birthDate}</div>
+                  <div className="text-sm border-b border-soft pb-1">{profile.birthDate}</div>
                 </div>
 
                 <div className="mb-4">
                   <div className="uppercase text-xs tracking-widest text-orange-500">Subtítulos</div>
-                  <div className="border-b border-soft pb-1">
+                  <div className="text-sm border-b border-soft pb-1">
                     {profile.subtitle === 'SI' ? 'Sí' : 'No'}
                   </div>
                 </div>
 
                 <div className="mb-4">
                   <div className="uppercase text-xs tracking-widest text-orange-500">Tamaño de texto</div>
-                  <div className="border-b border-soft pb-1">
+                  <div className="text-sm border-b border-soft pb-1">
                     {profile.textSize === 'GRANDE' ? 'Grande' : 'Normal'}
                   </div>
                 </div>
@@ -114,13 +114,13 @@ export default function ProfileView() {
                   <p><span className="font-semibold">Fin:</span> {new Date(plan.endDate).toLocaleDateString()}</p> */}
                 </div>
               ) : (
-                <div className="text-sm text-gray-500">Aún no hay información de plan.</div>
+                <div className="text-xs text-gray-500">Aún no hay información de plan.</div>
               )}
             </div>
 
             {!isPremium && (
               <div className="mt-8">
-                <div className="text-gray-600 mb-3">Te quedan 5 sesiones restantes.</div>
+                <div className="text-sm text-gray-600 mb-3">Te quedan 5 sesiones restantes.</div>
                 <Link
                   to="/plans"
                   className="block text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow"

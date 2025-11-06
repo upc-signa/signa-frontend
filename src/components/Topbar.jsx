@@ -69,7 +69,7 @@ export default function Topbar() {
       <div className="max-w-6xl mx-auto h-12 flex items-center justify-between px-4">
         <Link
           to="/"
-          className="font-semibold tracking-wide hover:opacity-90 transition"
+          className="text-lg font-semibold tracking-wide hover:opacity-90 transition"
           aria-label="Ir al inicio"
         >
           SIGNA

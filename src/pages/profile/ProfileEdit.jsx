@@ -29,9 +29,9 @@ export default function ProfileEdit() {
           lastName: data.lastName ?? '',
           birthDate: data.birthDate ?? '',
           subtitle: data.subtitle ?? 'SI',
-          textSize: data.textSize ?? 'NORMAL',
+          textSize: data.textSize ?? 'NORMAL', // ← sin fallback a localStorage
         });
-        setPreview(profileService.pictureUrl(data.profilePicturePath));
+        setPreview(profileService.pictureUrl(data.profilePicturePath) || '');
       } catch {
         toast.error('Error al cargar la información del perfil');
       } finally {
@@ -56,15 +56,19 @@ export default function ProfileEdit() {
   const handleSubmit = async () => {
     try {
       setSaving(true);
+
       await profileService.updateProfile(form);
-      localStorage.setItem("textSize", form.textSize);
-      window.dispatchEvent(new CustomEvent("textSize:changed", { detail: form.textSize }));
+
+      document.documentElement.setAttribute(
+        'data-textsize',
+        form.textSize === 'GRANDE' ? 'GRANDE' : 'NORMAL'
+      );
 
       if (file) {
         const r = await profileService.uploadPicture(file);
-        const url = profileService.pictureUrl(r.profilePicturePath);
-        localStorage.setItem('avatarUrl', url);
-        window.dispatchEvent(new CustomEvent('avatar:changed', { detail: url }));
+        const p = r?.profilePicturePath || r?.path || r?.data?.profilePicturePath || '';
+        const url = profileService.pictureUrl(p);
+        if (url) setPreview(url);
       }
 
       toast.success('Perfil actualizado correctamente');
@@ -178,14 +182,14 @@ export default function ProfileEdit() {
                       type="button"
                       className="px-3 py-1 rounded-md border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                       onClick={async () => {
-                        await profileService.deletePicture();
-                        setFile(null);
-                        setPreview('');
-
-                        localStorage.removeItem('avatarUrl');
-                        window.dispatchEvent(new CustomEvent('avatar:changed', { detail: '' }));
-
-                        toast.success('Imagen eliminada');
+                        try {
+                          await profileService.deletePicture();
+                          setFile(null);
+                          setPreview('');
+                          toast.success('Imagen eliminada');
+                        } catch {
+                          toast.error('No se pudo eliminar la imagen');
+                        }
                       }}
                     >
                       Eliminar
