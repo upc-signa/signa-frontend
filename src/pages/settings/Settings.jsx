@@ -16,7 +16,6 @@ export default function Settings() {
     autoSync: true,
   });
 
-  // Cargar preferencias localstorage
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE);
     if (saved) {
@@ -45,7 +44,7 @@ export default function Settings() {
         <section className="card relative">
           {/* Tema */}
           <div className="mb-8">
-            <div className="uppercase text-[11px] tracking-widest text-orange-500 mb-1">Tema</div>
+            <div className="uppercase text-xs tracking-widest text-orange-500 mb-1">Tema</div>
 
             <div className="flex items-center gap-4">
                 <Toggle
@@ -58,7 +57,7 @@ export default function Settings() {
 
           {/* Notificación de uso diario */}
           <div className="mb-8">
-            <div className="uppercase text-[11px] tracking-widest text-orange-500 mb-1">
+            <div className="uppercase text-xs tracking-widest text-orange-500 mb-1">
               Notificación de uso diario
             </div>
             <div className="flex items-center gap-4">
@@ -95,7 +94,7 @@ export default function Settings() {
 
           {/* Datos sincronizados */}
           <div className="mb-10">
-            <div className="uppercase text-[11px] tracking-widest text-orange-500 mb-1">
+            <div className="uppercase text-xs tracking-widest text-orange-500 mb-1">
                 Datos sincronizados
             </div>
             <Toggle
@@ -109,7 +108,7 @@ export default function Settings() {
           <div>
             <Link
               to="/plans"
-              className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2 rounded-lg shadow"
+              className="text-sm inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2 rounded-lg shadow"
             >
               Cambiar de plan
             </Link>

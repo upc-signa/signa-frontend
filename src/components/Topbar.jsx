@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Bell, ChevronDown, UserRound, Cog, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { authService } from "../services/api/auth.service";
+import { profileService } from "../services/api/profile.service";
+import { toast } from "react-toastify";
 
 function getUserInitial() {
   try {
@@ -25,26 +27,49 @@ function getUserInitial() {
 export default function Topbar() {
   const [openNotif, setOpenNotif] = useState(false);
   const [openUser, setOpenUser] = useState(false);
+  const [profilePic, setProfilePic] = useState(() => localStorage.getItem("avatarUrl") || ""); // ✅ lee desde localStorage
   const notifRef = useRef(null);
   const userRef = useRef(null);
 
   const userInitial = useMemo(getUserInitial, []);
 
   useEffect(() => {
+    (async () => {
+      if (!profilePic) {
+        try {
+          const user = await profileService.getMyProfile();
+          if (user.profilePicturePath) {
+            const url = profileService.pictureUrl(user.profilePicturePath);
+            setProfilePic(url);
+            localStorage.setItem("avatarUrl", url);
+          }
+        } catch {
+          toast.error("Error al cargar avatar");
+        }
+      }
+    })();
+
+    const onAvatarChanged = (e) => setProfilePic(e.detail || "");
+    window.addEventListener("avatar:changed", onAvatarChanged);
+
     const close = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) setOpenNotif(false);
       if (userRef.current && !userRef.current.contains(e.target)) setOpenUser(false);
     };
     window.addEventListener("click", close);
-    return () => window.removeEventListener("click", close);
-  }, []);
+
+    return () => {
+      window.removeEventListener("click", close);
+      window.removeEventListener("avatar:changed", onAvatarChanged);
+    };
+  }, [profilePic]);
 
   return (
     <header className="w-full border-b bg-[#ff6b3d] text-black">
       <div className="max-w-6xl mx-auto h-12 flex items-center justify-between px-4">
         <Link
           to="/"
-          className="font-semibold tracking-wide hover:opacity-90 transition"
+          className="text-lg font-semibold tracking-wide hover:opacity-90 transition"
           aria-label="Ir al inicio"
         >
           SIGNA
@@ -85,9 +110,17 @@ export default function Topbar() {
               aria-haspopup="menu"
               type="button"
             >
-              <div className="w-6 h-6 rounded-full bg-white grid place-items-center text-xs font-semibold">
-                {userInitial ? userInitial : <UserRound size={14} />}
-              </div>
+              {profilePic ? (
+                <img
+                  src={profilePic}
+                  alt="Usuario"
+                  className="w-6 h-6 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-white grid place-items-center text-xs font-semibold">
+                  {userInitial ? userInitial : <UserRound size={14} />}
+                </div>
+              )}
               <ChevronDown size={16} />
             </button>
 
@@ -101,11 +134,11 @@ export default function Topbar() {
                   <UserRound size={16} /> Perfil
                 </Link>
                 <Link
-                    to="/settings"
-                    className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50"
-                    onClick={() => setOpenUser(false)}
-                    >
-                    <Cog size={16} /> Configuración
+                  to="/settings"
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50"
+                  onClick={() => setOpenUser(false)}
+                >
+                  <Cog size={16} /> Configuración
                 </Link>
                 <button
                   type="button"
