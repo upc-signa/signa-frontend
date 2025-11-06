@@ -45,7 +45,7 @@ export default function Settings() {
         <section className="card relative">
           {/* Tema */}
           <div className="mb-8">
-            <div className="uppercase text-[11px] tracking-widest text-orange-500 mb-1">Tema</div>
+            <div className="uppercase text-xs tracking-widest text-orange-500 mb-1">Tema</div>
 
             <div className="flex items-center gap-4">
                 <Toggle
@@ -58,7 +58,7 @@ export default function Settings() {
 
           {/* Notificación de uso diario */}
           <div className="mb-8">
-            <div className="uppercase text-[11px] tracking-widest text-orange-500 mb-1">
+            <div className="uppercase text-xs tracking-widest text-orange-500 mb-1">
               Notificación de uso diario
             </div>
             <div className="flex items-center gap-4">
@@ -95,7 +95,7 @@ export default function Settings() {
 
           {/* Datos sincronizados */}
           <div className="mb-10">
-            <div className="uppercase text-[11px] tracking-widest text-orange-500 mb-1">
+            <div className="uppercase text-xs tracking-widest text-orange-500 mb-1">
                 Datos sincronizados
             </div>
             <Toggle

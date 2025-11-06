@@ -12,9 +12,6 @@ export default function ProfileView() {
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const mockSubs = 'Sí';
-  const mockTextSize = 'Normal';
-
   useEffect(() => {
     (async () => {
       try {
@@ -46,30 +43,34 @@ export default function ProfileView() {
             <div className="grid md:grid-cols-[1fr_260px] gap-8">
               <div>
                 <div className="mb-4">
-                  <div className="uppercase text-[11px] tracking-widest text-orange-500">Usuario</div>
+                  <div className="uppercase text-xs tracking-widest text-orange-500">Usuario</div>
                   <div className="border-b border-soft pb-1">
                     {profile.firstName} {profile.lastName}
                   </div>
                 </div>
 
                 <div className="mb-4">
-                  <div className="uppercase text-[11px] tracking-widest text-orange-500">Contraseña</div>
+                  <div className="uppercase text-xs tracking-widest text-orange-500">Contraseña</div>
                   <div className="border-b border-soft pb-1">************</div>
                 </div>
 
                 <div className="mb-4">
-                  <div className="uppercase text-[11px] tracking-widest text-orange-500">Fecha de nacimiento</div>
+                  <div className="uppercase text-xs tracking-widest text-orange-500">Fecha de nacimiento</div>
                   <div className="border-b border-soft pb-1">{profile.birthDate}</div>
                 </div>
 
                 <div className="mb-4">
-                  <div className="uppercase text-[11px] tracking-widest text-orange-500">Subtítulos</div>
-                  <div className="border-b border-soft pb-1">{mockSubs}</div>
+                  <div className="uppercase text-xs tracking-widest text-orange-500">Subtítulos</div>
+                  <div className="border-b border-soft pb-1">
+                    {profile.subtitle === 'SI' ? 'Sí' : 'No'}
+                  </div>
                 </div>
 
                 <div className="mb-4">
-                  <div className="uppercase text-[11px] tracking-widest text-orange-500">Tamaño de texto</div>
-                  <div className="border-b border-soft pb-1">{mockTextSize}</div>
+                  <div className="uppercase text-xs tracking-widest text-orange-500">Tamaño de texto</div>
+                  <div className="border-b border-soft pb-1">
+                    {profile.textSize === 'GRANDE' ? 'Grande' : 'Normal'}
+                  </div>
                 </div>
               </div>
 
@@ -81,8 +82,16 @@ export default function ProfileView() {
                   Editar perfil
                 </Link>
 
-                <div className="avatar-box text-sm">
-                  Cambiar imagen
+                <div className="avatar-box text-sm overflow-hidden grid place-items-center">
+                  {profile.profilePicturePath ? (
+                    <img
+                      src={profileService.pictureUrl(profile.profilePicturePath)}
+                      alt="Foto de perfil"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="muted">Sin imagen</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -94,7 +103,9 @@ export default function ProfileView() {
 
               {plan ? (
                 <div className="grid sm:grid-cols-2 gap-y-2 text-sm">
-                  <p><span className="font-semibold">Tipo:</span> {formatPlan(plan.planType)}</p>
+                  <p>
+                    <span className="font-semibold">Tipo:</span> {formatPlan(plan.planType)}
+                  </p>
                   <p>
                     <span className="font-semibold">Estado:</span>{' '}
                     {plan.active ? 'Activo' : plan.expired ? 'Expirado' : 'Inactivo'}
@@ -105,23 +116,6 @@ export default function ProfileView() {
               ) : (
                 <div className="text-sm text-gray-500">Aún no hay información de plan.</div>
               )}
-
-              {/* {!isPremium && (
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <Link
-                    to="/plans"
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg shadow-md"
-                  >
-                    Actualizar a Premium
-                  </Link>
-                  <Link
-                    to="/plans"
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg"
-                  >
-                    Ver planes
-                  </Link>
-                </div>
-              )} */}
             </div>
 
             {!isPremium && (

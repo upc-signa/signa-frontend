@@ -1,16 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { profileService } from '../../services/api/profile.service';
 import { useNavigate } from 'react-router-dom';
 
 export default function ProfileEdit() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ firstName: '', lastName: '', birthDate: '' });
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    birthDate: '',
+    subtitle: 'SI',
+    textSize: 'NORMAL',
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [mockSubs, setMockSubs] = useState('Sí');
-  const [mockTextSize, setMockTextSize] = useState('Normal');
+  // Imagen
+  const [preview, setPreview] = useState('');
+  const [file, setFile] = useState(null);
+  const fileRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -20,7 +28,10 @@ export default function ProfileEdit() {
           firstName: data.firstName ?? '',
           lastName: data.lastName ?? '',
           birthDate: data.birthDate ?? '',
+          subtitle: data.subtitle ?? 'SI',
+          textSize: data.textSize ?? 'NORMAL',
         });
+        setPreview(profileService.pictureUrl(data.profilePicturePath));
       } catch {
         toast.error('Error al cargar la información del perfil');
       } finally {
@@ -29,10 +40,33 @@ export default function ProfileEdit() {
     })();
   }, []);
 
+  const pickFile = () => fileRef.current?.click();
+
+  const onFileChange = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!f.type.startsWith('image/')) {
+      toast.error('Selecciona una imagen válida');
+      return;
+    }
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+  };
+
   const handleSubmit = async () => {
     try {
       setSaving(true);
       await profileService.updateProfile(form);
+      localStorage.setItem("textSize", form.textSize);
+      window.dispatchEvent(new CustomEvent("textSize:changed", { detail: form.textSize }));
+
+      if (file) {
+        const r = await profileService.uploadPicture(file);
+        const url = profileService.pictureUrl(r.profilePicturePath);
+        localStorage.setItem('avatarUrl', url);
+        window.dispatchEvent(new CustomEvent('avatar:changed', { detail: url }));
+      }
+
       toast.success('Perfil actualizado correctamente');
       navigate('/profile', { replace: true });
     } catch {
@@ -55,7 +89,7 @@ export default function ProfileEdit() {
             <div className="grid md:grid-cols-[1fr_260px] gap-8">
               <div className="space-y-6">
                 <div>
-                  <label className="uppercase text-[11px] tracking-widest text-orange-500 block mb-1">
+                  <label className="uppercase text-xs tracking-widest text-orange-500 block mb-1">
                     Usuario
                   </label>
                   <input
@@ -68,7 +102,7 @@ export default function ProfileEdit() {
                 </div>
 
                 <div>
-                  <label className="uppercase text-[11px] tracking-widest text-orange-500 block mb-1">
+                  <label className="uppercase text-xs tracking-widest text-orange-500 block mb-1">
                     Apellido
                   </label>
                   <input
@@ -81,7 +115,7 @@ export default function ProfileEdit() {
                 </div>
 
                 <div>
-                  <label className="uppercase text-[11px] tracking-widest text-orange-500 block mb-1">
+                  <label className="uppercase text-xs tracking-widest text-orange-500 block mb-1">
                     Fecha de nacimiento
                   </label>
                   <input
@@ -93,38 +127,79 @@ export default function ProfileEdit() {
                 </div>
 
                 <div>
-                  <label className="uppercase text-[11px] tracking-widest text-orange-500 block mb-1">
+                  <label className="uppercase text-xs tracking-widest text-orange-500 block mb-1">
                     Subtítulos
                   </label>
                   <select
-                    value={mockSubs}
-                    onChange={(e) => setMockSubs(e.target.value)}
+                    value={form.subtitle}
+                    onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
                     className="select-underline"
                   >
-                    <option>Sí</option>
-                    <option>No</option>
+                    <option value="SI">Sí</option>
+                    <option value="NO">No</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="uppercase text-[11px] tracking-widest text-orange-500 block mb-1">
+                  <label className="uppercase text-xs tracking-widest text-orange-500 block mb-1">
                     Tamaño de texto
                   </label>
                   <select
-                    value={mockTextSize}
-                    onChange={(e) => setMockTextSize(e.target.value)}
+                    value={form.textSize}
+                    onChange={(e) => setForm({ ...form, textSize: e.target.value })}
                     className="select-underline"
                   >
-                    <option>Normal</option>
-                    <option>Grande</option>
+                    <option value="NORMAL">Normal</option>
+                    <option value="GRANDE">Grande</option>
                   </select>
                 </div>
               </div>
 
-              <div className="flex items-start justify-center">
-                <div className="avatar-box text-sm">
-                  Cambiar imagen
+              <div className="flex flex-col items-center gap-3">
+                <div className="avatar-box text-sm overflow-hidden grid place-items-center">
+                  {preview ? (
+                    <img src={preview} alt="Foto de perfil" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="muted">Sin imagen</span>
+                  )}
                 </div>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={pickFile}
+                    className="px-3 py-1 rounded-md border hover:bg-gray-50 dark:hover:bg-zinc-800"
+                  >
+                    Cambiar imagen
+                  </button>
+
+                  {preview && (
+                    <button
+                      type="button"
+                      className="px-3 py-1 rounded-md border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      onClick={async () => {
+                        await profileService.deletePicture();
+                        setFile(null);
+                        setPreview('');
+
+                        localStorage.removeItem('avatarUrl');
+                        window.dispatchEvent(new CustomEvent('avatar:changed', { detail: '' }));
+
+                        toast.success('Imagen eliminada');
+                      }}
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </div>
+
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={onFileChange}
+                  className="hidden"
+                />
               </div>
             </div>
 
