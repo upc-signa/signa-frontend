@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Bell, ChevronDown, UserRound, Cog, LogOut } from "lucide-react";
+import { Bell, ChevronDown, UserRound, Cog, LogOut, History } from "lucide-react";
 import { Link } from "react-router-dom";
 import { authService } from "../services/api/auth.service";
 import { profileService } from "../services/api/profile.service";
@@ -132,6 +132,13 @@ export default function Topbar() {
                   onClick={() => setOpenUser(false)}
                 >
                   <UserRound size={16} /> Perfil
+                </Link>
+                <Link
+                  to="/history"
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50"
+                  onClick={() => setOpenUser(false)}
+                >
+                  <History size={16} /> Historial
                 </Link>
                 <Link
                   to="/settings"
