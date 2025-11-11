@@ -26,7 +26,7 @@ export default function Register() {
   // Password validations
   const validations = {
     length: formData.password.length >= 12,
-    special: /[#$%&/]/.test(formData.password),
+    special: /[#$%&*/]/.test(formData.password),
     number: /\d/.test(formData.password),
     uppercase: /[A-Z]/.test(formData.password)
   };
@@ -75,9 +75,35 @@ export default function Register() {
         );
         return;
       }
+
+      // Validar requisitos de contraseña
+      if (!validations.length || !validations.special || !validations.number || !validations.uppercase) {
+        const missingRequirements = [];
+        if (!validations.length) missingRequirements.push('Mínimo 12 caracteres');
+        if (!validations.special) missingRequirements.push('Al menos 1 carácter especial (# $ % & /)');
+        if (!validations.number) missingRequirements.push('Al menos 1 número');
+        if (!validations.uppercase) missingRequirements.push('Al menos 1 letra mayúscula');
+
+        toast.error(
+          <div>
+            <p>La contraseña no cumple con los requisitos:</p>
+            <ul className="list-disc pl-4 mt-2">
+              {missingRequirements.map(req => (
+                <li key={req}>{req}</li>
+              ))}
+            </ul>
+          </div>,
+          {
+            position: "top-right",
+            autoClose: 5000
+          }
+        );
+        return;
+      }
       
       if (formData.password !== formData.confirmPassword) {
         setError('Las contraseñas no coinciden');
+        toast.error('Las contraseñas no coinciden');
         return;
       }
 

@@ -15,6 +15,7 @@ import ProfileEdit from "./pages/profile/ProfileEdit";
 import Plans from "./pages/plans/Plans";
 import Checkout from "./pages/plans/Checkout";
 import Settings from "./pages/settings/Settings";
+import History from "./pages/history/History";
 import PrivateLayout from "./layouts/PrivateLayout";
 
 const router = createBrowserRouter([
@@ -44,6 +45,7 @@ const router = createBrowserRouter([
           { path: "plans", element: <Plans /> },
           { path: "checkout", element: <Checkout /> },
           { path: "settings", element: <Settings /> },
+          { path: "history", element: <History /> },
         ],
       },
     ],
