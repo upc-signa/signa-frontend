@@ -1,16 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Trash2, Eye, AlertCircle, Crown } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { historyService } from '../../services/api/history.service';
 import { planService } from '../../services/api/plan.service';
-import { useNavigate } from 'react-router-dom';
 import HistorySearch from './HistorySearch';
 import MeetDetail from './MeetDetail';
-import { MessageSquare, Trash2, Calendar, Users, AlertCircle } from 'lucide-react';
 
-/**
- * Vista principal del historial de Meets
- * Solo accesible para usuarios Premium
- */
 export default function History() {
   const navigate = useNavigate();
   const [meets, setMeets] = useState([]);
@@ -19,21 +15,34 @@ export default function History() {
   const [isPremium, setIsPremium] = useState(false);
   const [selectedMeet, setSelectedMeet] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  
+  // Estados de filtros
+  const [filters, setFilters] = useState({
+    searchTerm: '',
+    startDate: '',
+    endDate: ''
+  });
 
-  // Verificar plan premium y cargar historial
   useEffect(() => {
     checkPremiumAndLoad();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Aplicar filtros cuando cambien
+  useEffect(() => {
+    applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, meets]);
+
   const checkPremiumAndLoad = async () => {
     try {
+      setLoading(true);
       const plan = await planService.getCurrentPlan().catch(() => null);
       const premium = plan?.planType === 'PREMIUM' && plan?.active;
       setIsPremium(premium);
 
       if (!premium) {
-        toast.error('Esta función solo está disponible para usuarios Premium');
+        toast.warning('Necesitas una cuenta Premium para acceder al historial');
         navigate('/plans');
         return;
       }
@@ -41,13 +50,14 @@ export default function History() {
       await loadHistory();
     } catch {
       toast.error('Error al verificar el plan');
+      navigate('/plans');
+    } finally {
       setLoading(false);
     }
   };
 
   const loadHistory = async () => {
     try {
-      setLoading(true);
       const data = await historyService.getHistory();
       setMeets(data || []);
       setFilteredMeets(data || []);
@@ -55,80 +65,67 @@ export default function History() {
       toast.error('Error al cargar el historial');
       setMeets([]);
       setFilteredMeets([]);
-    } finally {
-      setLoading(false);
     }
   };
 
-  // Búsqueda por palabras clave
+  // Aplicar todos los filtros combinados
+  const applyFilters = () => {
+    let filtered = [...meets];
+
+    // Filtro por palabra clave
+    if (filters.searchTerm.trim()) {
+      const searchLower = filters.searchTerm.toLowerCase();
+      filtered = filtered.filter((meet) => {
+        const hasInMessages = meet.messages?.some(
+          (msg) =>
+            msg.content?.toLowerCase().includes(searchLower) ||
+            msg.senderName?.toLowerCase().includes(searchLower)
+        );
+        return hasInMessages;
+      });
+    }
+
+    // Filtro por fechas
+    if (filters.startDate || filters.endDate) {
+      filtered = filtered.filter((meet) => {
+        const meetDate = new Date(meet.createdAt);
+        const start = filters.startDate ? new Date(filters.startDate) : null;
+        const end = filters.endDate ? new Date(filters.endDate) : null;
+
+        if (start && end) {
+          return meetDate >= start && meetDate <= end;
+        }
+        if (start) {
+          return meetDate >= start;
+        }
+        if (end) {
+          return meetDate <= end;
+        }
+        return true;
+      });
+    }
+
+    setFilteredMeets(filtered);
+  };
+
   const handleSearch = (searchTerm) => {
-    if (!searchTerm.trim()) {
-      setFilteredMeets(meets);
-      return;
-    }
-
-    const term = searchTerm.toLowerCase();
-    const filtered = meets.filter((meet) => {
-      // Buscar en participantes
-      const participantsMatch = meet.participants?.some((p) =>
-        p.toLowerCase().includes(term)
-      );
-
-      // Buscar en mensajes
-      const messagesMatch = meet.messages?.some((msg) =>
-        msg.content?.toLowerCase().includes(term) ||
-        msg.sender?.toLowerCase().includes(term)
-      );
-
-      return participantsMatch || messagesMatch;
-    });
-
-    setFilteredMeets(filtered);
+    setFilters(prev => ({ ...prev, searchTerm }));
   };
 
-  // Filtro por fechas
   const handleDateFilter = ({ startDate, endDate }) => {
-    if (!startDate && !endDate) {
-      setFilteredMeets(meets);
-      return;
-    }
-
-    const filtered = meets.filter((meet) => {
-      const meetDate = new Date(meet.date);
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-
-      if (start && meetDate < start) return false;
-      if (end && meetDate > end) return false;
-      return true;
-    });
-
-    setFilteredMeets(filtered);
+    setFilters(prev => ({ ...prev, startDate, endDate }));
   };
 
-  // Ver detalle de un meet
-  const handleViewMeet = async (meetId) => {
-    try {
-      const meetDetail = await historyService.getMeetById(meetId);
-      setSelectedMeet(meetDetail);
-    } catch {
-      toast.error('Error al cargar el detalle del meet');
+  const handleViewMeet = (meetId) => {
+    // Buscar el meet en el array local ya que no hay endpoint individual
+    const meetData = meets.find(m => m.id === meetId);
+    if (meetData) {
+      setSelectedMeet(meetData);
+    } else {
+      toast.error('No se pudo encontrar el detalle del meet');
     }
   };
 
-  // Eliminar un meet individual
-  const handleDeleteMeet = async (meetId) => {
-    try {
-      await historyService.deleteMeet(meetId);
-      toast.success('Meet eliminado correctamente');
-      setShowDeleteConfirm(null);
-      await loadHistory();
-    } catch {
-      toast.error('Error al eliminar el meet');
-    }
-  };
-
-  // Eliminar todo el historial
   const handleDeleteAllHistory = async () => {
     try {
       await historyService.deleteAllHistory();
@@ -154,150 +151,170 @@ export default function History() {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-10">
-        <div className="flex items-center justify-center py-20">
-          <div className="text-gray-500">Cargando historial...</div>
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Cargando historial...</p>
         </div>
       </div>
     );
   }
 
   if (!isPremium) {
-    return null; // Ya redirigido
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center p-4">
+        <div className="card rounded-2xl shadow-md p-8 max-w-md text-center">
+          <Crown className="text-orange-500 mx-auto mb-4" size={48} />
+          <h2 className="text-2xl font-bold mb-4">Función Premium</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            El historial de conversaciones solo está disponible para usuarios Premium.
+          </p>
+          <button
+            onClick={() => navigate('/plans')}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          >
+            Ver Planes Premium
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-10">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-black text-orange-500 flex items-center gap-3">
-          <MessageSquare size={32} />
-          Historial de Meets
-        </h1>
-        {meets.length > 0 && (
-          <button
-            onClick={() => setShowDeleteConfirm('all')}
-            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
-          >
-            <Trash2 size={16} />
-            Eliminar todo
-          </button>
-        )}
-      </div>
-
-      {/* Componente de búsqueda */}
-      <HistorySearch onSearch={handleSearch} onDateFilter={handleDateFilter} />
-
-      {/* Lista de meets */}
-      {filteredMeets.length === 0 ? (
-        <div className="card rounded-2xl shadow-md p-12 text-center">
-          <MessageSquare size={64} className="mx-auto text-gray-300 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-600 mb-2">
-            {meets.length === 0 ? 'No hay historial disponible' : 'No se encontraron resultados'}
-          </h2>
-          <p className="text-gray-500">
-            {meets.length === 0
-              ? 'Tus conversaciones aparecerán aquí una vez que realices tu primer meet.'
-              : 'Intenta ajustar los filtros de búsqueda.'}
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+            Historial de Conversaciones
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Revisa todas tus conversaciones anteriores
           </p>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredMeets.map((meet) => (
-            <div
-              key={meet.id}
-              className="card rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Calendar className="text-orange-500" size={20} />
-                    <h3 className="text-lg font-semibold">{formatDate(meet.date)}</h3>
-                  </div>
 
-                  {/* Participantes */}
-                  {meet.participants && meet.participants.length > 0 && (
-                    <div className="flex items-center gap-2 mb-3">
-                      <Users size={16} className="text-gray-400" />
-                      <div className="flex flex-wrap gap-2">
-                        {meet.participants.map((participant, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium"
-                          >
-                            {participant}
-                          </span>
-                        ))}
-                      </div>
+        <HistorySearch onSearch={handleSearch} onDateFilter={handleDateFilter} />
+
+        {/* Indicador de filtros activos */}
+        {(filters.searchTerm || filters.startDate || filters.endDate) && (
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              <AlertCircle size={16} className="inline mr-1" />
+              {filteredMeets.length} resultado(s) encontrado(s)
+              {filters.searchTerm && ` con "${filters.searchTerm}"`}
+              {filters.startDate && ` desde ${new Date(filters.startDate).toLocaleDateString('es-ES')}`}
+              {filters.endDate && ` hasta ${new Date(filters.endDate).toLocaleDateString('es-ES')}`}
+            </p>
+          </div>
+        )}
+
+        {filteredMeets.length === 0 ? (
+          <div className="card rounded-2xl shadow-md p-12 text-center">
+            <p className="text-gray-500 dark:text-gray-400 text-lg">
+              {meets.length === 0 
+                ? 'Aún no tienes conversaciones guardadas'
+                : 'No se encontraron resultados con los filtros aplicados'}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Total: {filteredMeets.length} conversación(es)
+              </p>
+              {meets.length > 0 && (
+                <button
+                  onClick={() => setShowDeleteConfirm('all')}
+                  className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  <Trash2 size={16} />
+                  Eliminar todo el historial
+                </button>
+              )}
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {filteredMeets.map((meet) => (
+                <div
+                  key={meet.id}
+                  className="card rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
+                >
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      📅 {formatDate(meet.createdAt)}
+                    </p>
+                    
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        meet.isActive 
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                          : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                      }`}>
+                        {meet.isActive ? '🟢 Activa' : '⚫ Finalizada'}
+                      </span>
                     </div>
-                  )}
 
-                  {/* Resumen de mensajes */}
-                  <div className="text-sm text-gray-600">
-                    <MessageSquare size={14} className="inline mr-1" />
-                    {meet.messages?.length || 0} mensaje(s)
+                    {meet.endSessionTime && !meet.isActive && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Finalizada: {new Date(meet.endSessionTime).toLocaleTimeString('es-ES', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    )}
+                  </div>
+
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    💬 {meet.messageCount} mensaje(s)
+                  </p>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleViewMeet(meet.id)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+                    >
+                      <Eye size={16} />
+                      Ver detalles
+                    </button>
                   </div>
                 </div>
+              ))}
+            </div>
+          </>
+        )}
 
-                {/* Acciones */}
-                <div className="flex gap-2 ml-4">
-                  <button
-                    onClick={() => handleViewMeet(meet.id)}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
-                  >
-                    Ver detalles
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(meet.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+        {selectedMeet && (
+          <MeetDetail meet={selectedMeet} onClose={() => setSelectedMeet(null)} />
+        )}
+
+        {showDeleteConfirm === 'all' && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+              <div className="flex items-center gap-3 mb-4 text-red-500">
+                <AlertCircle size={24} />
+                <h3 className="text-xl font-bold">Confirmar eliminación</h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                ¿Estás seguro de que deseas eliminar <strong>TODO</strong> tu historial de conversaciones? 
+                Esta acción no se puede deshacer y perderás todas tus conversaciones guardadas.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(null)}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeleteAllHistory}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  Sí, eliminar todo
+                </button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Modal de detalle */}
-      {selectedMeet && (
-        <MeetDetail meet={selectedMeet} onClose={() => setSelectedMeet(null)} />
-      )}
-
-      {/* Modal de confirmación de eliminación */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex items-center gap-3 mb-4 text-red-500">
-              <AlertCircle size={24} />
-              <h3 className="text-xl font-bold">Confirmar eliminación</h3>
-            </div>
-            <p className="text-gray-600 mb-6">
-              {showDeleteConfirm === 'all'
-                ? '¿Estás seguro de que deseas eliminar TODO tu historial? Esta acción no se puede deshacer.'
-                : '¿Estás seguro de que deseas eliminar este meet? Esta acción no se puede deshacer.'}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setShowDeleteConfirm(null)}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-semibold transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() =>
-                  showDeleteConfirm === 'all'
-                    ? handleDeleteAllHistory()
-                    : handleDeleteMeet(showDeleteConfirm)
-                }
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors"
-              >
-                Eliminar
-              </button>
-            </div>
           </div>
-        </div>
-      )}
-    </main>
+        )}
+      </div>
+    </div>
   );
 }

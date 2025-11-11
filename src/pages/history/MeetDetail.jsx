@@ -8,10 +8,13 @@ export default function MeetDetail({ meet, onClose }) {
 
   const getMessageIcon = (type) => {
     switch (type) {
+      case 'SIGN':
       case 'seña':
         return <Hand size={16} className="text-orange-500" />;
+      case 'SUBTITLE':
       case 'subtitulo':
         return <Subtitles size={16} className="text-blue-500" />;
+      case 'CHAT':
       case 'chat':
       default:
         return <MessageCircle size={16} className="text-green-500" />;
@@ -20,10 +23,13 @@ export default function MeetDetail({ meet, onClose }) {
 
   const getMessageTypeLabel = (type) => {
     switch (type) {
+      case 'SIGN':
       case 'seña':
         return 'Seña';
+      case 'SUBTITLE':
       case 'subtitulo':
         return 'Subtítulo';
+      case 'CHAT':
       case 'chat':
       default:
         return 'Chat';
@@ -50,7 +56,15 @@ export default function MeetDetail({ meet, onClose }) {
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold mb-2">Detalle del Meet</h2>
-              <p className="text-orange-100">{formatDateTime(meet.date)}</p>
+              <p className="text-orange-100">{formatDateTime(meet.createdAt)}</p>
+              {meet.endSessionTime && (
+                <p className="text-orange-100 text-sm mt-1">
+                  Finalizada: {new Date(meet.endSessionTime).toLocaleString('es-ES', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              )}
             </div>
             <button
               onClick={onClose}
@@ -62,22 +76,16 @@ export default function MeetDetail({ meet, onClose }) {
             </button>
           </div>
 
-          {/* Participantes */}
-          {meet.participants && meet.participants.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm text-orange-100 mb-1">Participantes:</p>
-              <div className="flex flex-wrap gap-2">
-                {meet.participants.map((participant, idx) => (
-                  <span
-                    key={idx}
-                    className="bg-orange-400 text-white px-3 py-1 rounded-full text-sm"
-                  >
-                    {participant}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Estado */}
+          <div className="mt-4">
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+              meet.isActive 
+                ? 'bg-green-400 text-white' 
+                : 'bg-orange-300 text-orange-900'
+            }`}>
+              {meet.isActive ? '🟢 Sesión Activa' : '⚫ Sesión Finalizada'}
+            </span>
+          </div>
         </div>
 
         {/* Mensajes */}
@@ -90,22 +98,22 @@ export default function MeetDetail({ meet, onClose }) {
             <div className="space-y-4">
               {meet.messages.map((message, idx) => (
                 <div
-                  key={idx}
+                  key={message.id || idx}
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-gray-800">
-                        {message.sender || 'Usuario'}
+                        {message.senderName || 'Usuario'}
                       </span>
                       <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full text-xs">
-                        {getMessageIcon(message.type)}
-                        <span>{getMessageTypeLabel(message.type)}</span>
+                        {getMessageIcon(message.messageType)}
+                        <span>{getMessageTypeLabel(message.messageType)}</span>
                       </div>
                     </div>
-                    {message.timestamp && (
+                    {message.sentAt && (
                       <span className="text-xs text-gray-500">
-                        {new Date(message.timestamp).toLocaleTimeString('es-ES', {
+                        {new Date(message.sentAt).toLocaleTimeString('es-ES', {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
