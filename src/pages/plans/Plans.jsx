@@ -4,21 +4,19 @@ import { useNavigate } from 'react-router-dom';
 
 const BENEFITS = {
   FREE: [
-    'Crear videollamadas (5 sesiones por semana)',
-    'Reconocimiento de gestos en tiempo real',
+    'Crear videollamadas (hasta 5 sesiones por semana)',
+    'Duración máxima de 10 minutos por llamada',
     'Historial de conversaciones',
-    'Soporte por email',
-    'Actualizaciones básicas',
+    'Hasta 5 participantes por reunión',
+    'Reconocimiento de gestos en tiempo real',
   ],
   PREMIUM: [
-    'Acceso ilimitado a la plataforma',
-    'Proyectos ilimitados',
+    'Videollamadas ilimitadas y en alta resolución',
+    'Sin límite de duración ni cantidad de participantes',
     '100 GB de almacenamiento',
+    'Traducción avanzada de lenguaje de señas a voz y texto',
     'Soporte prioritario 24/7',
-    'Todas las actualizaciones',
-    'Análisis avanzados',
-    'Colaboración en equipo',
-    'Integración con API',
+    'Acceso anticipado a nuevas funciones de IA',
   ],
 };
 
@@ -59,14 +57,14 @@ export default function Plans() {
             disabled
             className="w-full bg-gray-100 text-gray-400 rounded-lg py-3"
           >
-            Comenzar Gratis
+            Gratis
           </button>
         </div>
 
         {/* Premium */}
         <div className="rounded-2xl border-2 border-orange-300 shadow p-6">
           <h3 className="text-xl font-semibold mb-1">Premium</h3>
-          <p className="text-sm text-gray-500 mb-4">Para profesionales y equipos</p>
+          <p className="text-sm text-gray-500 mb-4">Para mejor experiencia</p>
           <div className="text-3xl font-bold mb-4">$9.99 <span className="text-base font-normal">/ mes</span></div>
           <ul className="space-y-2 mb-6 text-sm">
             {BENEFITS.PREMIUM.map((b) => <li key={b}>✓ {b}</li>)}
