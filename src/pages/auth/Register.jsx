@@ -26,7 +26,7 @@ export default function Register() {
   // Password validations
   const validations = {
     length: formData.password.length >= 12,
-    special: /[#$%&*/]/.test(formData.password),
+    special: /[#$%&/]/.test(formData.password),
     number: /\d/.test(formData.password),
     uppercase: /[A-Z]/.test(formData.password)
   };
