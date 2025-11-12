@@ -6,14 +6,12 @@ const BENEFITS = {
   FREE: [
     'Crear videollamadas (hasta 5 sesiones por semana)',
     'Duración máxima de 10 minutos por llamada',
-    'Historial de conversaciones',
     'Hasta 5 participantes por reunión',
     'Reconocimiento de gestos en tiempo real',
   ],
   PREMIUM: [
     'Videollamadas ilimitadas y en alta resolución',
     'Sin límite de duración ni cantidad de participantes',
-    '100 GB de almacenamiento',
     'Traducción avanzada de lenguaje de señas a voz y texto',
     'Soporte prioritario 24/7',
     'Acceso anticipado a nuevas funciones de IA',

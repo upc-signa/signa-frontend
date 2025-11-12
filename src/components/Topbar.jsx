@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { authService } from "../services/api/auth.service";
 import { profileService } from "../services/api/profile.service";
 import { toast } from "react-toastify";
+import { usePlanExpiryNotice } from "../hooks/usePlanExpiryNotice";
+import { formatDateLocal } from "../utils/planExpiry";
 
 function getUserInitial() {
   try {
@@ -32,7 +34,7 @@ export default function Topbar() {
   const userRef = useRef(null);
 
   const userInitial = useMemo(getUserInitial, []);
-
+  const planNotice = usePlanExpiryNotice(); // { loading, show, message, expired, daysLeft, endDate, dismissToday }
   useEffect(() => {
     (async () => {
       if (!profilePic) {
@@ -85,19 +87,49 @@ export default function Topbar() {
               type="button"
             >
               <Bell size={18} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-white rounded-full" />
+                {planNotice.show && !planNotice.loading && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-white rounded-full" />
+                )}
             </button>
 
             {openNotif && (
               <div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 rounded-lg shadow-lg p-2 z-20">
-                <div className="flex items-start gap-2 p-2 hover:bg-gray-50 rounded">
-                  <div className="mt-1"><Bell size={14} /></div>
-                  <div className="text-sm">Tu plan se va a vencer pronto.</div>
-                </div>
-                <div className="flex items-start gap-2 p-2 hover:bg-gray-50 rounded">
-                  <div className="mt-1"><Bell size={14} /></div>
-                  <div className="text-sm">Recuerda usar tus sesiones restantes.</div>
-                </div>
+                {planNotice.show ? (
+                  <div className="p-2 rounded border border-orange-200 bg-orange-50">
+                    <div className="flex items-start gap-2">
+                      <div className="mt-1"><Bell size={14} /></div>
+                      <div className="text-sm leading-snug">
+                        <div className="font-semibold text-orange-700">
+                          {planNotice.expired ? "Plan vencido" : "Plan por vencer"}
+                        </div>
+                        <div className="text-gray-700">{planNotice.message}</div>
+                        {!!planNotice.endDate && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            Vence el {formatDateLocal(planNotice.endDate)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {/* <div className="mt-2 flex gap-2">
+                      <Link
+                        to="/plans"
+                        className="text-xs px-2 py-1 rounded bg-orange-500 text-white hover:bg-orange-600"
+                        onClick={() => setOpenNotif(false)}
+                      >
+                        Ver planes
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => { planNotice.dismissToday(); setOpenNotif(false); }}
+                        className="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50"
+                      >
+                        Descartar por hoy
+                      </button>
+                    </div> */}
+                  </div>
+                ) : (
+                  <div className="p-2 text-xs text-gray-500">No tienes notificaciones.</div>
+                )}
               </div>
             )}
           </div>

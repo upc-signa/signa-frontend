@@ -40,9 +40,10 @@ export default function PlanChoice({ onFree, onPremium, onClose }) {
               </span>
             </div>
             <ul className="ml-4 list-disc text-sm text-gray-600">
-              <li>Acceso básico a funciones</li>
-              <li>Análisis limitado</li>
-              <li>Sin costo</li>
+              <li>Crear videollamadas (hasta 5 sesiones por semana)</li>
+              <li>Duración máxima de 10 minutos por llamada</li>
+              <li>Hasta 5 participantes por reunión</li>
+              <li>Reconocimiento de gestos en tiempo real</li>
             </ul>
             <button
               onClick={onFree}
@@ -60,16 +61,17 @@ export default function PlanChoice({ onFree, onPremium, onClose }) {
               </span>
             </div>
             <ul className="ml-4 list-disc text-sm text-gray-600">
-              <li>Funciones avanzadas</li>
-              <li>Mayor capacidad y métricas</li>
-              <li>Soporte prioritario</li>
+              <li>Videollamadas ilimitadas y en alta resolución</li>
+              <li>Sin límite de duración ni cantidad de participantes</li>
+              <li>Traducción avanzada de lenguaje de señas a voz y texto</li>
+              <li>Soporte prioritario 24/7</li>
+              <li>Acceso anticipado a nuevas funciones de IA</li>
             </ul>
             <button
               disabled={busy}
               onClick={async () => {
                 try {
                   setBusy(true);
-                  // Deja que el contenedor maneje checkout/upgrade:
                   await onPremium();
                 } finally {
                   setBusy(false);
