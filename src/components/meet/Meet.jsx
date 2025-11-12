@@ -159,7 +159,7 @@ export default function Meet({ meet }) {
     useEffect(() => {
         Object.values(remoteUsers).forEach(async (user) => {
             if (user.videoTrack) {
-                const el = await waitForElement(`#user-${user.uid}`);
+                const el = await waitForElement(`#video-slot-${user.uid}`);
                 if (el) {
                     try {
                         user.videoTrack.play(el);
@@ -464,63 +464,60 @@ export default function Meet({ meet }) {
                     <div className="flex-1 flex overflow-hidden">
                         {/* Video Area */}
                         <div className="flex-1 relative p-4">
-                            <div className="h-full flex items-center justify-center">
-                                <div className="grid gap-4 w-full h-full" style={{
-                                    gridTemplateColumns: Object.keys(remoteUsers).length === 0 ? '1fr' : 
-                                                         Object.keys(remoteUsers).length === 1 ? 'repeat(2, 1fr)' :
-                                                         'repeat(auto-fit, minmax(400px, 1fr))'
-                                }}>
-                                    {/* Video local */}
-                                    <div className="relative bg-gray-900 rounded-xl overflow-hidden shadow-2xl">
-                                        <div
-                                            ref={localContainerRef}
-                                            className="w-full h-full flex items-center justify-center"
-                                        >
-                                            {!localTracks.video && (
+                            <div className="grid gap-4 w-full h-full" style={{
+                                gridTemplateColumns: Object.keys(remoteUsers).length === 0 ? '1fr' : 
+                                                     Object.keys(remoteUsers).length === 1 ? 'repeat(2, 1fr)' :
+                                                     'repeat(auto-fit, minmax(400px, 1fr))'
+                            }}>
+                                {/* Video local */}
+                                <div className="relative bg-gray-900 rounded-xl overflow-hidden shadow-2xl">
+                                    <div
+                                        ref={localContainerRef}
+                                        className="w-full h-full"
+                                    >
+                                        {!localTracks.video && (
+                                            <div className="w-full h-full flex items-center justify-center">
                                                 <div className="flex flex-col items-center gap-3">
                                                     <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center text-2xl font-bold">
                                                         {name.charAt(0).toUpperCase()}
                                                     </div>
                                                     <span className="text-gray-400">Cámara apagada</span>
                                                 </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 px-3 py-1 rounded-lg flex items-center gap-2">
+                                        <span className="text-sm font-medium">{name} (Tú)</span>
+                                        {!micEnabled && <MicOff size={16} className="text-red-500" />}
+                                    </div>
+                                </div>
+
+                                {/* Videos remotos */}
+                                {Object.values(remoteUsers).map((user) => (
+                                    <div
+                                        key={user.uid}
+                                        className="relative bg-gray-900 rounded-xl overflow-hidden shadow-2xl"
+                                    >
+                                        <div
+                                            id={`video-slot-${user.uid}`}
+                                            className="w-full h-full"
+                                        >
+                                            {!user.videoTrack && (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-2xl font-bold">
+                                                            U
+                                                        </div>
+                                                        <span className="text-gray-400">Cámara apagada</span>
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
-                                        <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 px-3 py-1 rounded-lg flex items-center gap-2">
-                                            <span className="text-sm font-medium">{name} (Tú)</span>
-                                            {!micEnabled && <MicOff size={16} className="text-red-500" />}
+                                        <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 px-3 py-1 rounded-lg">
+                                            <span className="text-sm font-medium">Usuario {user.uid}</span>
                                         </div>
                                     </div>
-
-                                    {/* Videos remotos */}
-                                    {Object.values(remoteUsers).map((user) => (
-                                        <div
-                                            key={user.uid}
-                                            className="relative bg-gray-900 rounded-xl overflow-hidden shadow-2xl"
-                                        >
-                                            <div
-                                                id={`user-${user.uid}`}
-                                                className="w-full h-full flex items-center justify-center"
-                                            >
-                                                <div
-                                                    id={`video-slot-${user.uid}`}
-                                                    className="w-full h-full"
-                                                >
-                                                    {!user.videoTrack && (
-                                                        <div className="flex flex-col items-center gap-3">
-                                                            <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-2xl font-bold">
-                                                                U
-                                                            </div>
-                                                            <span className="text-gray-400">Cámara apagada</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 px-3 py-1 rounded-lg">
-                                                <span className="text-sm font-medium">Usuario {user.uid}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                ))}
                             </div>
                         </div>
 
