@@ -38,13 +38,18 @@ export default function MeetDetail({ meet, onClose }) {
 
   const formatDateTime = (dateString) => {
     if (!dateString) return 'Fecha no disponible';
-    const date = new Date(dateString);
-    return date.toLocaleString('es-ES', {
+    // Asegurar que la fecha tenga "Z" para indicar UTC
+    const isoString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+    const date = new Date(isoString);
+    // Ajustar a hora de Perú (UTC-5)
+    const peruDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
+    return peruDate.toLocaleString('es-PE', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'UTC'
     });
   };
 
@@ -59,10 +64,16 @@ export default function MeetDetail({ meet, onClose }) {
               <p className="text-orange-100">{formatDateTime(meet.createdAt)}</p>
               {meet.endSessionTime && (
                 <p className="text-orange-100 text-sm mt-1">
-                  Finalizada: {new Date(meet.endSessionTime).toLocaleString('es-ES', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  Finalizada: {(() => {
+                    const isoString = meet.endSessionTime.endsWith('Z') ? meet.endSessionTime : meet.endSessionTime + 'Z';
+                    const date = new Date(isoString);
+                    const peruDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
+                    return peruDate.toLocaleTimeString('es-PE', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      timeZone: 'UTC'
+                    });
+                  })()}
                 </p>
               )}
             </div>
@@ -106,17 +117,23 @@ export default function MeetDetail({ meet, onClose }) {
                       <span className="font-semibold text-gray-800">
                         {message.senderName || 'Usuario'}
                       </span>
-                      <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full text-xs">
+                      <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full text-xs text-black">
                         {getMessageIcon(message.messageType)}
                         <span>{getMessageTypeLabel(message.messageType)}</span>
                       </div>
                     </div>
                     {message.sentAt && (
                       <span className="text-xs text-gray-500">
-                        {new Date(message.sentAt).toLocaleTimeString('es-ES', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {(() => {
+                          const isoString = message.sentAt.endsWith('Z') ? message.sentAt : message.sentAt + 'Z';
+                          const date = new Date(isoString);
+                          const peruDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
+                          return peruDate.toLocaleTimeString('es-PE', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'UTC'
+                          });
+                        })()}
                       </span>
                     )}
                   </div>

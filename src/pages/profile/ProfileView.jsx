@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { profileService } from '../../services/api/profile.service';
 import { planService } from '../../services/api/plan.service';
+import { daysUntil, formatDateLocal } from '../../utils/planExpiry';
 
 const formatPlan = (type) =>
   (type || '').toLowerCase() === 'premium' ? 'Premium' : 'Free';
@@ -31,6 +32,11 @@ export default function ProfileView() {
   if (!profile) return <div className="p-10 text-red-500">No se encontró el perfil.</div>;
 
   const isPremium = plan?.planType === 'PREMIUM' && plan?.active;
+
+  const daysLeft =
+   plan && typeof plan?.endDate === 'string' ? daysUntil(plan.endDate) : null;
+  const showDaysLeft =
+   plan && plan.planType === 'PREMIUM' && !plan.expired && typeof daysLeft === 'number';
 
   return (
     <>
@@ -110,8 +116,33 @@ export default function ProfileView() {
                     <span className="font-semibold">Estado:</span>{' '}
                     {plan.active ? 'Activo' : plan.expired ? 'Expirado' : 'Inactivo'}
                   </p>
-                  {/* <p><span className="font-semibold">Inicio:</span> {new Date(plan.startDate).toLocaleDateString()}</p>
-                  <p><span className="font-semibold">Fin:</span> {new Date(plan.endDate).toLocaleDateString()}</p> */}
+                  <p>
+                    <span className="font-semibold">Inicio:</span>{' '}
+                    {formatDateLocal(plan.startDate) || '—'}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Fin:</span>{' '}
+                    {plan.planType === 'FREE' || new Date(plan.endDate).getFullYear() - new Date(plan.startDate).getFullYear() > 100
+                      ? 'Sin vencimiento'
+                      : formatDateLocal(plan.endDate) || '—'}
+                  </p>
+                  {plan.planType === 'FREE' && (
+                    <p className="sm:col-span-2 text-gray-600 text-xs italic">
+                      El plan gratuito no tiene fecha de vencimiento.
+                    </p>
+                  )}
+
+                  {showDaysLeft && (
+                    <p className="sm:col-span-2">
+                      <span className="font-semibold">Días restantes:</span>{' '}
+                      {daysLeft === 0 ? 'Vence hoy' : `${daysLeft} día${daysLeft === 1 ? '' : 's'}`}
+                    </p>
+                  )}
+                  {plan.expired && (
+                    <p className="sm:col-span-2 text-red-600 font-medium">
+                      Tu plan ha vencido. Renueva para mantener el acceso.
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="text-xs text-gray-500">Aún no hay información de plan.</div>
