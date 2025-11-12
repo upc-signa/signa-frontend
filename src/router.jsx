@@ -15,7 +15,9 @@ import ProfileEdit from "./pages/profile/ProfileEdit";
 import Plans from "./pages/plans/Plans";
 import Checkout from "./pages/plans/Checkout";
 import Settings from "./pages/settings/Settings";
+import History from "./pages/history/History";
 import PrivateLayout from "./layouts/PrivateLayout";
+import MeetRoom from "./pages/meet/MeetRoom";
 
 const router = createBrowserRouter([
   {
@@ -29,7 +31,7 @@ const router = createBrowserRouter([
       { path: "/recover-password", element: <PublicGuard><RecoverPassword /></PublicGuard> },
       { path: "/verification-code", element: <PublicGuard><VerificationCode /></PublicGuard> },
       { path: "/change-password", element: <PublicGuard><ChangePassword /></PublicGuard> },
-
+      { path: "meet/:uuid", element: <MeetRoom /> },
       // Privadas (bajo PrivateLayout)
       {
         element: (
@@ -44,6 +46,7 @@ const router = createBrowserRouter([
           { path: "plans", element: <Plans /> },
           { path: "checkout", element: <Checkout /> },
           { path: "settings", element: <Settings /> },
+          { path: "history", element: <History /> },
         ],
       },
     ],

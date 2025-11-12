@@ -1,4 +1,6 @@
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
 }
@@ -8,5 +10,28 @@ body {
   display: block;
 }
 
-a { color: inherit; text-decoration: none; }
-button { cursor: pointer; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+.meet-room {
+  display: flex;
+  gap: 40px;
+  max-width: 80%;
+  margin: 0 auto;
+  width: 100%;
+  align-items: center;
+}
+
+.meet-room>div:first-child {
+  width: calc(100% - 308px);
+}
+
+.meet-room>div:last-child {
+  width: 308px;
+}
