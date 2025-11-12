@@ -6,6 +6,9 @@ import { authService } from '../../services/api/auth.service';
 import TermsDialog from '../../components/TermsDialog';
 import { toast } from 'react-toastify';
 
+import PlanChoice from '../../components/PlanChoice';
+import CheckoutModal from '../../components/CheckoutModal';
+
 export default function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -22,6 +25,10 @@ export default function Register() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState('');
   const [showTerms, setShowTerms] = useState(false);
+
+  const [showPlanChoice, setShowPlanChoice] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [showCheckout, setShowCheckout] = useState(false);
 
   // Password validations
   const validations = {
@@ -115,17 +122,34 @@ export default function Register() {
         birthDate: formData.birthDate
       };
       
-      await authService.register(registerData);
-      // Navigate to verification code page for email verification
-      navigate('/verification-code', { 
-        state: { 
-          email: formData.email,
-          purpose: 'email'  // Could omit this since 'email' is default
-        } 
-      });
+      const resp = await authService.register(registerData);
+
+      const token = resp?.data?.token ?? resp?.token;
+      // Guardar solo como token temporal para upgrade (no autenticar la app)
+      if (token) localStorage.setItem('reg_token', token);
+
+      setRegisteredEmail(formData.email);
+
+      setShowPlanChoice(true);
+
     } catch (error) {
       setError(error.response?.data?.message || 'Ocurrió un error durante el registro');
     }
+  };
+
+  const handleChooseFree = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('reg_token');
+
+    setShowPlanChoice(false);
+    navigate('/verification-code', { 
+      state: { email: registeredEmail, purpose: 'email' }
+    });
+  };
+
+  const handleChoosePremium = async () => {
+    setShowPlanChoice(false);
+    setShowCheckout(true);
   };
 
   return (
@@ -339,6 +363,33 @@ export default function Register() {
                 className="object-contain"
             />*/}
         </div>
+
+      {showCheckout && (
+        <CheckoutModal
+          plan="PREMIUM"
+          email={registeredEmail}
+          onConfirmSuccess={() => {
+            setShowCheckout(false);
+            // tras pago OK → verificación de correo (mantener flujo)
+            navigate('/verification-code', { 
+              state: { email: registeredEmail, purpose: 'email' },
+              replace: true
+            });
+          }}
+          onClose={() => {
+            // si cancela el pago, vuelve a elegir plan
+            setShowCheckout(false);
+            setShowPlanChoice(true);
+          }}
+        />
+      )}
+      {showPlanChoice && (
+        <PlanChoice
+          onFree={handleChooseFree}
+          onPremium={handleChoosePremium}
+          onClose={() => setShowPlanChoice(false)}
+        />
+      )}
     </div>
   );
 }
