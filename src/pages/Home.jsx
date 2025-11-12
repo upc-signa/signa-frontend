@@ -36,7 +36,7 @@ export default function Home() {
         const used = response?.meetsCreatedToday || 0;
         const max = response?.maxAllowed || 2;
         const remaining = response?.remaining || 0;
-        
+
         setSessionsUsed(used);
         setMaxSessions(max);
         setCanCreate(remaining > 0);
@@ -58,9 +58,23 @@ export default function Home() {
     try {
       // Aquí iría la lógica para crear el meet
       // Por ahora solo mostramos un mensaje
-      toast.info('Funcionalidad de crear meet en desarrollo');
-      // await meetService.createMeet({ /* datos del meet */ });
-      // await loadSessionInfo(); // Recargar info después de crear
+
+      const meet = await meetService.createNewMeet({});
+
+      const meetUrl = `${window.location.origin}/meet/${meet.uuid}`;
+      await navigator.clipboard.writeText(meetUrl);
+
+      toast.info(`¡Listo! Se creó tu reunión (ID: ${meet.uuid}). En unos segundos se abrirá en una nueva pestaña y el enlace ya está copiado para compartir.`);
+      setTimeout(() => {
+        window.open("/meet/" + meet.uuid, "_blank");
+      }, [5000])
+
+      if (!isPremium) {
+        const newSessionsUsed = sessionsUsed + 1;
+        const remaining = maxSessions - newSessionsUsed;
+        setSessionsUsed(newSessionsUsed);
+        setCanCreate(remaining > 0);
+      }
     } catch {
       toast.error('Error al crear la sesión');
     }
@@ -174,18 +188,16 @@ export default function Home() {
         <div className="flex items-center justify-center py-16">
           <button
             type="button"
-            className={`group flex flex-col items-center gap-2 ${
-              !canCreate && !isPremium ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`group flex flex-col items-center gap-2 ${!canCreate && !isPremium ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             onClick={handleCreateMeet}
             disabled={!canCreate && !isPremium}
           >
             <div
-              className={`rounded-xl p-6 bg-[#ff6b3d] text-white shadow-md transition ${
-                canCreate || isPremium
-                  ? 'group-hover:shadow-lg group-hover:scale-105'
-                  : ''
-              }`}
+              className={`rounded-xl p-6 bg-[#ff6b3d] text-white shadow-md transition ${canCreate || isPremium
+                ? 'group-hover:shadow-lg group-hover:scale-105'
+                : ''
+                }`}
             >
               <BookMarked size={44} />
             </div>
