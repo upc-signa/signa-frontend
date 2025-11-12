@@ -1,21 +1,35 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import AgoraRTC from "agora-rtc-sdk-ng";
+import { Realtime } from "ably";
+import { 
+  Mic, 
+  MicOff, 
+  Video, 
+  VideoOff, 
+  PhoneOff, 
+  MessageSquare,
+  Settings,
+  MoreVertical
+} from 'lucide-react';
 import Chat from "./Chat";
 import { env } from '../../config/env';
 
 const APP_ID = "3807e6c8dfc4434faa3a57e3d67c6842";
 
-
 export default function Meet({ meet }) {
+    const navigate = useNavigate();
     const [joined, setJoined] = useState(false);
-
     const [name, setName] = useState("");
     const [uid, setUid] = useState("");
-
     const [remoteUsers, setRemoteUsers] = useState({});
     const [localTracks, setLocalTracks] = useState({ audio: null, video: null });
     const [cameraEnabled, setCameraEnabled] = useState(true);
     const [micEnabled, setMicEnabled] = useState(true);
+    const [showChat, setShowChat] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [hasUnread, setHasUnread] = useState(false);
+    const [isJoining, setIsJoining] = useState(false);
 
     const localContainerRef = useRef(null);
     const clientRef = useRef(null);
@@ -96,13 +110,17 @@ export default function Meet({ meet }) {
                                 try {
                                     u.videoTrack.stop();
                                     u.videoTrack.close();
-                                } catch { }
+                                } catch (e) {
+                                    console.error("Error closing video track", e);
+                                }
                             }
                             if (u.audioTrack) {
                                 try {
                                     u.audioTrack.stop();
                                     u.audioTrack.close();
-                                } catch { }
+                                } catch (e) {
+                                    console.error("Error closing audio track", e);
+                                }
                             }
                         });
                     }
@@ -166,7 +184,7 @@ export default function Meet({ meet }) {
             return;
         }
 
-
+        setIsJoining(true);
 
         try {
             const tokenRequest = await fetch(env.API_URL_FRONTEND + `signa-token?channel=${meet.uuid}&uid=${uid}`);
@@ -196,10 +214,12 @@ export default function Meet({ meet }) {
         } catch (err) {
             console.error("Error join:", err);
             alert("Error al unirse. Revisa consola.");
+        } finally {
+            setIsJoining(false);
         }
     };
 
-    const leaveMeet = async () => {
+    const leaveMeet = useCallback(async () => {
         const client = clientRef.current;
 
         try {
@@ -229,17 +249,104 @@ export default function Meet({ meet }) {
             setJoined(false);
             setRemoteUsers({});
             setLocalTracks({ audio: null, video: null });
+
+            // Verificar si el usuario está autenticado (tiene token)
+            const token = localStorage.getItem('token');
+            if (token) {
+                // Usuario autenticado (creador) - redirigir a Home
+                navigate('/');
+            }
+            // Si no hay token, solo resetea el estado (vuelve a la pantalla de login)
         } catch (err) {
             console.error("leaveMeet error", err);
+            // Si hay error, solo resetear estado (no redirigir)
+            setJoined(false);
+            setRemoteUsers({});
+            setLocalTracks({ audio: null, video: null });
         }
-    };
+    }, [localTracks, navigate]);
 
-    // ✅ NUEVO: cerrar sesión automáticamente si se recarga o cierra la pestaña
+    // Suscripción a Ably para el chat (siempre activa cuando joined=true)
+    useEffect(() => {
+        if (!joined || !meet.uuid) return;
+
+        let ablyClient = null;
+
+        const initAbly = async () => {
+            try {
+                ablyClient = new Realtime({
+                    key: "cCqgBQ.afR32Q:TlHR0hT_yKHMfHYCJU48MbRqlWkiGtmRdyGBYowc9cI",
+                });
+
+                const channel = ablyClient.channels.get(meet.uuid);
+
+                const handleMessage = (msg) => {
+                    let data;
+                    try {
+                        data = typeof msg.data === "string" ? JSON.parse(msg.data) : msg.data;
+                    } catch (error) {
+                        console.error("Error parsing message:", error);
+                        return;
+                    }
+
+                    // Si el mensaje no tiene tiempo, agregarlo
+                    if (!data.time) {
+                        data.time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    }
+
+                    // Evitar duplicados
+                    setMessages((prev) => {
+                        // Verificar si ya existe un mensaje idéntico
+                        const exists = prev.some(
+                            m => m.uid === data.uid && 
+                                 m.text === data.text && 
+                                 m.time === data.time
+                        );
+                        
+                        if (exists) {
+                            // Es duplicado, no hacer nada
+                            return prev;
+                        }
+
+                        // Es un mensaje nuevo
+                        // Marcar como no leído solo si NO es del usuario actual y el chat está cerrado
+                        if (data.uid !== uid) {
+                            setShowChat((currentShowChat) => {
+                                if (!currentShowChat) {
+                                    setHasUnread(true);
+                                }
+                                return currentShowChat;
+                            });
+                        }
+
+                        return [...prev, data];
+                    });
+                };
+
+                channel.subscribe("message", handleMessage);
+            } catch (error) {
+                console.error("Error al conectar con Ably:", error);
+            }
+        };
+
+        initAbly();
+
+        return () => {
+            if (ablyClient) {
+                const channel = ablyClient.channels.get(meet.uuid);
+                channel.unsubscribe();
+                ablyClient.close();
+            }
+        };
+    }, [joined, meet.uuid, uid]);
+
     useEffect(() => {
         const handleBeforeUnload = async () => {
             try {
                 await leaveMeet();
-            } catch { }
+            } catch (e) {
+                console.error(e);
+            }
         };
 
         window.addEventListener("beforeunload", handleBeforeUnload);
@@ -247,7 +354,7 @@ export default function Meet({ meet }) {
         return () => {
             window.removeEventListener("beforeunload", handleBeforeUnload);
         };
-    }, [joined, localTracks]);
+    }, [leaveMeet]);
 
     const toggleCamera = async () => {
         const { video } = localTracks;
@@ -287,128 +394,214 @@ export default function Meet({ meet }) {
         }
     };
 
+    const toggleChat = () => {
+        if (!showChat) {
+            // Al abrir el chat, marcar todos como leídos
+            setHasUnread(false);
+        }
+        setShowChat(!showChat);
+    };
+
     const handleLogin = async (name) => {
         const uid = String(Math.floor(Math.random() * 2032));
         setUid(uid);
-        setName(name)
-    }
+        setName(name);
+    };
 
     return (
-        <div>
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white p-4">
-                {!joined ? (
-                    <div className="bg-gray-800 p-6 rounded-xl shadow-lg text-center w-80">
-                        <h1 className="text-3xl font-black text-orange-500 mb-6 mb-4">Unirse al Meet</h1>
+        <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+            {!joined ? (
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="bg-gray-900 p-8 rounded-xl shadow-2xl w-96">
+                        <h1 className="text-3xl font-bold text-orange-500 mb-6 text-center">
+                            Unirse al Meet
+                        </h1>
                         <input
                             type="text"
                             placeholder="Tu nombre"
                             value={name}
                             onChange={(e) => handleLogin(e.target.value)}
-                            className="input-underline mb-4"
+                            onKeyDown={(e) => e.key === 'Enter' && !isJoining && joinMeet()}
+                            disabled={isJoining}
+                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg mb-4 focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <button
                             onClick={joinMeet}
-                            className="self-end bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow transition-colors w-full"
+                            disabled={isJoining}
+                            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            Entrar
+                            {isJoining ? (
+                                <>
+                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Ingresando...
+                                </>
+                            ) : (
+                                'Entrar'
+                            )}
                         </button>
                     </div>
-                ) : (
-                    <div  className="meet-room">
-                        <div>
-                            <h1 className="text-xl font-semibold mb-4 text-center">
-                                Bienvenido, {name} 👋 <br/> Meet: #{meet.uuid}
-                            </h1>
+                </div>
+            ) : (
+                <>
+                    {/* Header */}
+                    <div className="bg-gray-900 px-6 py-3 flex items-center justify-between border-b border-gray-800">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 bg-red-600 px-3 py-1 rounded-full">
+                                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                <span className="text-sm font-medium">En vivo</span>
+                            </div>
+                            <span className="text-sm text-gray-400">{meet.uuid}</span>
+                        </div>
+                        <button className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+                            <MoreVertical size={20} />
+                        </button>
+                    </div>
 
-                            <div className="flex flex-wrap justify-center gap-3 mb-6">
-                                <div
-                                    id="local-user"
-                                    ref={localContainerRef}
-                                    className="bg-gray-700 rounded-lg overflow-hidden w-72 h-52 shadow-md flex items-center justify-center text-gray-400 relative"
-                                >
-                                    {!localTracks.video && <span>Sin cámara</span>}
-                                    <span className="absolute bottom-2 left-2 text-xs bg-black bg-opacity-50 px-2 py-1 rounded z-40">
-                                        Tú
-                                    </span>
-                                    <style>{`
-                #local-user video {
-                  width: 100% !important;
-                  height: 100% !important;
-                  object-fit: cover;
-                  transform: scaleX(-1);
-                }
-                .remote-video video {
-                  width: 100% !important;
-                  height: 100% !important;
-                  object-fit: cover;
-                }
-              `}</style>
-                                </div>
+                    {/* Main Content */}
+                    <div className="flex-1 flex overflow-hidden">
+                        {/* Video Area */}
+                        <div className="flex-1 relative p-4">
+                            <div className="h-full flex items-center justify-center">
+                                <div className="grid gap-4 w-full h-full" style={{
+                                    gridTemplateColumns: Object.keys(remoteUsers).length === 0 ? '1fr' : 
+                                                         Object.keys(remoteUsers).length === 1 ? 'repeat(2, 1fr)' :
+                                                         'repeat(auto-fit, minmax(400px, 1fr))'
+                                }}>
+                                    {/* Video local */}
+                                    <div className="relative bg-gray-900 rounded-xl overflow-hidden shadow-2xl">
+                                        <div
+                                            ref={localContainerRef}
+                                            className="w-full h-full flex items-center justify-center"
+                                        >
+                                            {!localTracks.video && (
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center text-2xl font-bold">
+                                                        {name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <span className="text-gray-400">Cámara apagada</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 px-3 py-1 rounded-lg flex items-center gap-2">
+                                            <span className="text-sm font-medium">{name} (Tú)</span>
+                                            {!micEnabled && <MicOff size={16} className="text-red-500" />}
+                                        </div>
+                                    </div>
 
-                                {Object.values(remoteUsers).map((user) => {
-                                    const hasVideo = !!user.videoTrack;
-                                    return (
+                                    {/* Videos remotos */}
+                                    {Object.values(remoteUsers).map((user) => (
                                         <div
                                             key={user.uid}
-                                            id={`user-${user.uid}`}
-                                            className="remote-video bg-gray-700 rounded-lg overflow-hidden w-72 h-52 shadow-md relative"
+                                            className="relative bg-gray-900 rounded-xl overflow-hidden shadow-2xl"
                                         >
-                                            {/* contenedor específico donde Agora inyectará el <video> */}
                                             <div
-                                                id={`video-slot-${user.uid}`}
+                                                id={`user-${user.uid}`}
                                                 className="w-full h-full flex items-center justify-center"
-                                                style={{ position: "absolute", inset: 0 }}
                                             >
-                                                {!hasVideo && <span className="text-gray-400">Sin cámara</span>}
+                                                <div
+                                                    id={`video-slot-${user.uid}`}
+                                                    className="w-full h-full"
+                                                >
+                                                    {!user.videoTrack && (
+                                                        <div className="flex flex-col items-center gap-3">
+                                                            <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-2xl font-bold">
+                                                                U
+                                                            </div>
+                                                            <span className="text-gray-400">Cámara apagada</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-
-                                            {/* etiqueta fuera del slot de video para que no la borre el SDK */}
-                                            <span className="user-label absolute bottom-2 left-2 text-xs bg-black bg-opacity-50 px-2 py-1 rounded z-40">
-                                                Usuario {user.uid}
-                                            </span>
+                                            <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 px-3 py-1 rounded-lg">
+                                                <span className="text-sm font-medium">Usuario {user.uid}</span>
+                                            </div>
                                         </div>
-                                    );
-                                })}
-
-
-                            </div>
-
-                            <div className={"flex gap-2 items-center mt-2 mb-6 justify-center"}>
-                                <button
-                                    onClick={toggleMic}
-                                    className={`${micEnabled ? "bg-yellow-600 hover:bg-yellow-700" : "bg-green-600 hover:bg-green-700"
-                                        } px-4 py-2 rounded-lg`}
-                                >
-                                    {micEnabled ? "Mutear micrófono" : "Activar micrófono"}
-                                </button>
-
-                                <button
-                                    onClick={toggleCamera}
-                                    className={`${cameraEnabled ? "bg-yellow-600 hover:bg-yellow-700" : "bg-green-600 hover:bg-green-700"
-                                        } px-4 py-2 rounded-lg`}
-                                >
-                                    {cameraEnabled ? "Apagar cámara" : "Encender cámara"}
-                                </button>
-
-                                <button
-                                    onClick={leaveMeet}
-                                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg"
-                                >
-                                    Salir del Meet
-                                </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
-                        <Chat
-                            uid={uid}
-                            name={name}
-                            channel={meet.uuid}
-                            id={meet.id}
-                        />
+                        {/* Chat Sidebar */}
+                        {showChat && (
+                            <div className="w-96 bg-gray-900 border-l border-gray-800 flex flex-col">
+                                <Chat
+                                    uid={uid}
+                                    name={name}
+                                    channel={meet.uuid}
+                                    id={meet.id}
+                                    messages={messages}
+                                    onClose={() => setShowChat(false)}
+                                />
+                            </div>
+                        )}
                     </div>
-                )}
 
-            </div>
+                    {/* Bottom Controls */}
+                    <div className="bg-gray-900 px-6 py-4 border-t border-gray-800">
+                        <div className="flex items-center justify-center gap-3">
+                            <button
+                                onClick={toggleMic}
+                                className={`p-4 rounded-full transition-all ${
+                                    micEnabled 
+                                        ? 'bg-gray-800 hover:bg-gray-700' 
+                                        : 'bg-red-600 hover:bg-red-700'
+                                }`}
+                            >
+                                {micEnabled ? <Mic size={24} /> : <MicOff size={24} />}
+                            </button>
+
+                            <button
+                                onClick={toggleCamera}
+                                className={`p-4 rounded-full transition-all ${
+                                    cameraEnabled 
+                                        ? 'bg-gray-800 hover:bg-gray-700' 
+                                        : 'bg-red-600 hover:bg-red-700'
+                                }`}
+                            >
+                                {cameraEnabled ? <Video size={24} /> : <VideoOff size={24} />}
+                            </button>
+
+                            <button
+                                onClick={leaveMeet}
+                                className="p-4 bg-red-600 hover:bg-red-700 rounded-full transition-colors"
+                            >
+                                <PhoneOff size={24} />
+                            </button>
+
+                            <button
+                                onClick={toggleChat}
+                                className="p-4 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors relative"
+                            >
+                                <MessageSquare size={24} />
+                                {hasUnread && !showChat && (
+                                    <div className="absolute top-1 right-1 w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+                                )}
+                            </button>
+
+                            <button className="p-4 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors">
+                                <Settings size={24} />
+                            </button>
+                        </div>
+                    </div>
+
+                    <style>{`
+                        [ref="localContainerRef"] video {
+                            width: 100% !important;
+                            height: 100% !important;
+                            object-fit: cover;
+                            transform: scaleX(-1);
+                        }
+                        [id^="video-slot-"] video {
+                            width: 100% !important;
+                            height: 100% !important;
+                            object-fit: cover;
+                        }
+                    `}</style>
+                </>
+            )}
         </div>
     );
 }

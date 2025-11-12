@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Eye, AlertCircle, Crown } from 'lucide-react';
+import { Trash2, Eye, AlertCircle, Crown, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { historyService } from '../../services/api/history.service';
 import { planService } from '../../services/api/plan.service';
@@ -12,6 +12,7 @@ export default function History() {
   const [meets, setMeets] = useState([]);
   const [filteredMeets, setFilteredMeets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [selectedMeet, setSelectedMeet] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
@@ -59,253 +60,8 @@ export default function History() {
   const loadHistory = async () => {
     try {
       const data = await historyService.getHistory();
-      
-      // Datos simulados para pruebas si el servicio no devuelve nada
-      const mockData = [
-        {
-          id: 1,
-          uuid: "550e8400-e29b-41d4-a716-446655440001",
-          profileId: 123,
-          createdAt: "2025-11-10T14:30:00.000Z",
-          endSessionTime: "2025-11-10T15:15:00.000Z",
-          isActive: false,
-          messageCount: 5,
-          messages: [
-            {
-              id: 1,
-              senderName: "María García",
-              content: "Hola, ¿cómo estás?",
-              messageType: "CHAT",
-              sentAt: "2025-11-10T14:30:15.000Z"
-            },
-            {
-              id: 2,
-              senderName: "Juan Pérez",
-              content: "¡Muy bien! ¿Y tú?",
-              messageType: "CHAT",
-              sentAt: "2025-11-10T14:30:45.000Z"
-            },
-            {
-              id: 3,
-              senderName: "María García",
-              content: "Perfecto, gracias",
-              messageType: "SUBTITLE",
-              sentAt: "2025-11-10T14:31:20.000Z"
-            },
-            {
-              id: 4,
-              senderName: "Juan Pérez",
-              content: "Señal de saludo",
-              messageType: "SIGN",
-              sentAt: "2025-11-10T14:32:00.000Z"
-            },
-            {
-              id: 5,
-              senderName: "María García",
-              content: "Nos vemos luego",
-              messageType: "CHAT",
-              sentAt: "2025-11-10T15:14:30.000Z"
-            }
-          ]
-        },
-        {
-          id: 2,
-          uuid: "550e8400-e29b-41d4-a716-446655440002",
-          profileId: 123,
-          createdAt: "2025-11-11T10:00:00.000Z",
-          endSessionTime: "2025-11-11T10:45:00.000Z",
-          isActive: false,
-          messageCount: 8,
-          messages: [
-            {
-              id: 6,
-              senderName: "Carlos Rodríguez",
-              content: "Buenos días equipo",
-              messageType: "CHAT",
-              sentAt: "2025-11-11T10:00:30.000Z"
-            },
-            {
-              id: 7,
-              senderName: "Ana López",
-              content: "Buenos días Carlos",
-              messageType: "CHAT",
-              sentAt: "2025-11-11T10:01:00.000Z"
-            },
-            {
-              id: 8,
-              senderName: "Carlos Rodríguez",
-              content: "Vamos a revisar el proyecto",
-              messageType: "SUBTITLE",
-              sentAt: "2025-11-11T10:05:00.000Z"
-            },
-            {
-              id: 9,
-              senderName: "Ana López",
-              content: "Señal de aprobación",
-              messageType: "SIGN",
-              sentAt: "2025-11-11T10:06:00.000Z"
-            },
-            {
-              id: 10,
-              senderName: "Pedro Sánchez",
-              content: "Estoy de acuerdo",
-              messageType: "CHAT",
-              sentAt: "2025-11-11T10:10:00.000Z"
-            },
-            {
-              id: 11,
-              senderName: "Carlos Rodríguez",
-              content: "Perfecto, entonces continuamos",
-              messageType: "CHAT",
-              sentAt: "2025-11-11T10:15:00.000Z"
-            },
-            {
-              id: 12,
-              senderName: "Ana López",
-              content: "Sí, adelante",
-              messageType: "SUBTITLE",
-              sentAt: "2025-11-11T10:20:00.000Z"
-            },
-            {
-              id: 13,
-              senderName: "Pedro Sánchez",
-              content: "Hasta luego",
-              messageType: "CHAT",
-              sentAt: "2025-11-11T10:44:30.000Z"
-            }
-          ]
-        },
-        {
-          id: 3,
-          uuid: "550e8400-e29b-41d4-a716-446655440003",
-          profileId: 123,
-          createdAt: "2025-11-11T16:20:00.000Z",
-          endSessionTime: null,
-          isActive: true,
-          messageCount: 3,
-          messages: [
-            {
-              id: 14,
-              senderName: "Laura Martínez",
-              content: "Hola a todos",
-              messageType: "CHAT",
-              sentAt: "2025-11-11T16:20:30.000Z"
-            },
-            {
-              id: 15,
-              senderName: "Miguel Torres",
-              content: "Hola Laura",
-              messageType: "CHAT",
-              sentAt: "2025-11-11T16:21:00.000Z"
-            },
-            {
-              id: 16,
-              senderName: "Laura Martínez",
-              content: "Señal de pregunta",
-              messageType: "SIGN",
-              sentAt: "2025-11-11T16:22:00.000Z"
-            }
-          ]
-        },
-        {
-          id: 4,
-          uuid: "550e8400-e29b-41d4-a716-446655440004",
-          profileId: 123,
-          createdAt: "2025-11-09T09:00:00.000Z",
-          endSessionTime: "2025-11-09T09:30:00.000Z",
-          isActive: false,
-          messageCount: 4,
-          messages: [
-            {
-              id: 17,
-              senderName: "Roberto Díaz",
-              content: "Reunión de seguimiento",
-              messageType: "CHAT",
-              sentAt: "2025-11-09T09:00:30.000Z"
-            },
-            {
-              id: 18,
-              senderName: "Elena Ruiz",
-              content: "Entendido",
-              messageType: "SUBTITLE",
-              sentAt: "2025-11-09T09:05:00.000Z"
-            },
-            {
-              id: 19,
-              senderName: "Roberto Díaz",
-              content: "Señal de confirmación",
-              messageType: "SIGN",
-              sentAt: "2025-11-09T09:10:00.000Z"
-            },
-            {
-              id: 20,
-              senderName: "Elena Ruiz",
-              content: "Gracias por la reunión",
-              messageType: "CHAT",
-              sentAt: "2025-11-09T09:29:30.000Z"
-            }
-          ]
-        },
-        {
-          id: 5,
-          uuid: "550e8400-e29b-41d4-a716-446655440005",
-          profileId: 123,
-          createdAt: "2025-11-08T18:00:00.000Z",
-          endSessionTime: "2025-11-08T18:20:00.000Z",
-          isActive: false,
-          messageCount: 6,
-          messages: [
-            {
-              id: 21,
-              senderName: "Sofía Hernández",
-              content: "Buenas tardes",
-              messageType: "CHAT",
-              sentAt: "2025-11-08T18:00:30.000Z"
-            },
-            {
-              id: 22,
-              senderName: "David Gómez",
-              content: "Hola Sofía",
-              messageType: "CHAT",
-              sentAt: "2025-11-08T18:01:00.000Z"
-            },
-            {
-              id: 23,
-              senderName: "Sofía Hernández",
-              content: "¿Podemos hablar sobre el documento?",
-              messageType: "SUBTITLE",
-              sentAt: "2025-11-08T18:02:00.000Z"
-            },
-            {
-              id: 24,
-              senderName: "David Gómez",
-              content: "Claro que sí",
-              messageType: "CHAT",
-              sentAt: "2025-11-08T18:03:00.000Z"
-            },
-            {
-              id: 25,
-              senderName: "Sofía Hernández",
-              content: "Señal de gracias",
-              messageType: "SIGN",
-              sentAt: "2025-11-08T18:15:00.000Z"
-            },
-            {
-              id: 26,
-              senderName: "David Gómez",
-              content: "De nada, hasta pronto",
-              messageType: "CHAT",
-              sentAt: "2025-11-08T18:19:30.000Z"
-            }
-          ]
-        }
-      ];
-
-      // Usar datos reales si existen, sino usar datos simulados
-      const finalData = (data && data.length > 0) ? data : mockData;
-      
-      setMeets(finalData);
-      setFilteredMeets(finalData);
+      setMeets(data || []);
+      setFilteredMeets(data || []);
     } catch {
       toast.error('Error al cargar el historial');
       setMeets([]);
@@ -397,15 +153,32 @@ export default function History() {
     }
   };
 
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await loadHistory();
+      toast.success('Historial actualizado');
+    } catch {
+      toast.error('Error al actualizar el historial');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Fecha no disponible';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
+    // Asegurar que la fecha tenga "Z" para indicar UTC
+    const isoString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+    const date = new Date(isoString);
+    // Ajustar a hora de Perú (UTC-5)
+    const peruDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
+    return peruDate.toLocaleDateString('es-PE', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'UTC'
     });
   };
 
@@ -481,15 +254,25 @@ export default function History() {
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Total: {filteredMeets.length} conversación(es)
               </p>
-              {meets.length > 0 && (
+              <div className="flex gap-2">
                 <button
-                  onClick={() => setShowDeleteConfirm('all')}
-                  className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Trash2 size={16} />
-                  Eliminar todo el historial
+                  <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+                  {refreshing ? 'Actualizando...' : 'Actualizar'}
                 </button>
-              )}
+                {meets.length > 0 && (
+                  <button
+                    onClick={() => setShowDeleteConfirm('all')}
+                    className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+                  >
+                    <Trash2 size={16} />
+                    Eliminar todo el historial
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -515,10 +298,16 @@ export default function History() {
 
                     {meet.endSessionTime && !meet.isActive && (
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Finalizada: {new Date(meet.endSessionTime).toLocaleTimeString('es-ES', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        Finalizada: {(() => {
+                          const isoString = meet.endSessionTime.endsWith('Z') ? meet.endSessionTime : meet.endSessionTime + 'Z';
+                          const date = new Date(isoString);
+                          const peruDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
+                          return peruDate.toLocaleTimeString('es-PE', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'UTC'
+                          });
+                        })()}
                       </p>
                     )}
                   </div>

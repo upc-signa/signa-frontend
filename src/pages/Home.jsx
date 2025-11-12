@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BookMarked, Info, Crown } from 'lucide-react';
+import { BookMarked, Info, Crown, Copy, ExternalLink, XCircle, Calendar, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { meetService } from '../services/api/meet.service';
@@ -11,10 +11,65 @@ export default function Home() {
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(true);
   const [canCreate, setCanCreate] = useState(true);
+  const [activeMeet, setActiveMeet] = useState(null);
+  const [meetDetails, setMeetDetails] = useState(null);
 
   useEffect(() => {
     loadSessionInfo();
+    // Recuperar y validar la sesión activa desde localStorage
+    const savedMeet = localStorage.getItem('activeMeet');
+    if (savedMeet) {
+      try {
+        const meetData = JSON.parse(savedMeet);
+        // Validar que la sesión aún esté activa en el backend
+        meetService.validateMeet(meetData.id)
+          .then((validation) => {
+            if (validation.isActive) {
+              setActiveMeet(meetData);
+              // Cargar detalles completos del meet
+              loadMeetDetails(meetData.id);
+            } else {
+              // La sesión ya no está activa, limpiar localStorage
+              localStorage.removeItem('activeMeet');
+              toast.info('La sesión guardada ya no está activa');
+            }
+          })
+          .catch((error) => {
+            console.error('Error al validar sesión:', error);
+            // Si hay error (ej: sesión eliminada), limpiar localStorage
+            localStorage.removeItem('activeMeet');
+          });
+      } catch (error) {
+        console.error('Error al recuperar sesión activa:', error);
+        localStorage.removeItem('activeMeet');
+      }
+    }
   }, []);
+
+  // Validar periódicamente que la sesión activa siga existente
+  useEffect(() => {
+    if (!activeMeet) return;
+
+    // Verificar cada 30 segundos si la sesión sigue activa
+    const interval = setInterval(async () => {
+      try {
+        const validation = await meetService.validateMeet(activeMeet.id);
+        if (!validation.isActive) {
+          setActiveMeet(null);
+          localStorage.removeItem('activeMeet');
+          toast.warning('La sesión ha sido finalizada');
+        }
+      } catch (error) {
+        // Si hay error, probablemente la sesión fue eliminada
+        console.error('Error al validar sesión:', error);
+        setActiveMeet(null);
+        localStorage.removeItem('activeMeet');
+        toast.warning('La sesión ya no está disponible');
+      }
+    }, 30000); // 30 segundos
+
+    return () => clearInterval(interval);
+  }, [activeMeet]);
 
   const loadSessionInfo = async () => {
     try {
@@ -49,6 +104,16 @@ export default function Home() {
     }
   };
 
+  const loadMeetDetails = async (meetId) => {
+    try {
+      const details = await meetService.getMeetById(meetId);
+      console.log('Meet details:', details); // Debug: ver qué devuelve el backend
+      setMeetDetails(details);
+    } catch (error) {
+      console.error('Error al cargar detalles del meet:', error);
+    }
+  };
+
   const handleCreateMeet = async () => {
     if (!canCreate && !isPremium) {
       toast.warning('Has alcanzado el límite de sesiones diarias. Actualiza a Premium para sesiones ilimitadas.');
@@ -56,18 +121,26 @@ export default function Home() {
     }
 
     try {
-      // Aquí iría la lógica para crear el meet
-      // Por ahora solo mostramos un mensaje
-
       const meet = await meetService.createNewMeet({});
 
       const meetUrl = `${window.location.origin}/meet/${meet.uuid}`;
       await navigator.clipboard.writeText(meetUrl);
 
-      toast.info(`¡Listo! Se creó tu reunión (ID: ${meet.uuid}). En unos segundos se abrirá en una nueva pestaña y el enlace ya está copiado para compartir.`);
-      setTimeout(() => {
-        window.open("/meet/" + meet.uuid, "_blank");
-      }, [5000])
+      // Guardar el meet activo
+      const activeMeetData = {
+        ...meet,
+        url: meetUrl,
+        createdAt: new Date().toISOString()
+      };
+      
+      setActiveMeet(activeMeetData);
+      // Persistir en localStorage
+      localStorage.setItem('activeMeet', JSON.stringify(activeMeetData));
+
+      // Cargar detalles completos del meet
+      loadMeetDetails(meet.id);
+
+      toast.success('¡Reunión creada exitosamente! El enlace ha sido copiado.');
 
       if (!isPremium) {
         const newSessionsUsed = sessionsUsed + 1;
@@ -78,6 +151,59 @@ export default function Home() {
     } catch {
       toast.error('Error al crear la sesión');
     }
+  };
+
+  const handleEndMeet = () => {
+    if (!activeMeet) return;
+
+    // Solo limpiar el estado local y localStorage (sin eliminar del backend)
+    setActiveMeet(null);
+    localStorage.removeItem('activeMeet');
+    toast.success('Sesión finalizada exitosamente');
+  };
+
+  const handleCopyUrl = async () => {
+    if (!activeMeet) return;
+
+    try {
+      await navigator.clipboard.writeText(activeMeet.url);
+      toast.success('Enlace copiado al portapapeles');
+    } catch {
+      toast.error('Error al copiar el enlace');
+    }
+  };
+
+  const handleJoinMeet = () => {
+    if (!activeMeet) return;
+    window.open(`/meet/${activeMeet.uuid}`, '_blank');
+  };
+
+  const formatDate = (dateString) => {
+    // Asegurar que la fecha tenga "Z" para indicar UTC
+    const isoString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+    const date = new Date(isoString);
+    // Ajustar a hora de Perú (UTC-5)
+    const peruDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
+    return peruDate.toLocaleDateString('es-PE', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric',
+      timeZone: 'UTC'
+    });
+  };
+
+  const formatTime = (dateString) => {
+    // Asegurar que la fecha tenga "Z" para indicar UTC
+    const isoString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+    const date = new Date(isoString);
+    // Ajustar a hora de Perú (UTC-5)
+    const peruDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
+    return peruDate.toLocaleTimeString('es-PE', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'UTC'
+    });
   };
 
   const sessionsRemaining = isPremium ? '∞' : Math.max(0, maxSessions - sessionsUsed);
@@ -185,7 +311,7 @@ export default function Home() {
         </div>
 
         {/* Botón de crear reunión */}
-        <div className="flex items-center justify-center py-16">
+        <div className="flex items-start justify-center gap-8 py-16 flex-wrap">
           <button
             type="button"
             className={`group flex flex-col items-center gap-2 ${!canCreate && !isPremium ? 'opacity-50 cursor-not-allowed' : ''
@@ -207,6 +333,89 @@ export default function Home() {
                 : 'Nueva reunión'}
             </span>
           </button>
+
+          {/* Card de sesión activa */}
+          {activeMeet && (
+            <div className="card rounded-2xl shadow-lg p-6 bg-white dark:bg-gray-800 border-2 border-orange-200 w-full max-w-md">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                    Sesión Activa
+                  </h3>
+                </div>
+                <button
+                  onClick={handleEndMeet}
+                  className="text-gray-400 hover:text-red-500 transition-colors"
+                  title="Finalizar sesión"
+                >
+                  <XCircle size={24} />
+                </button>
+              </div>
+
+              {/* Información de la sesión */}
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Calendar size={16} className="text-orange-500" />
+                  <span>Creada: {meetDetails?.createdAt ? formatDate(meetDetails.createdAt) : formatDate(activeMeet.createdAt)}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Clock size={16} className="text-orange-500" />
+                  <span>Inicio: {meetDetails?.createdAt ? formatTime(meetDetails.createdAt) : formatTime(activeMeet.createdAt)}</span>
+                </div>
+                {meetDetails && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <Clock size={16} className="text-orange-500" />
+                    <span>Fin programado: {meetDetails.endSessionTime ? formatTime(meetDetails.endSessionTime) : 'No definido'}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Info size={16} className="text-orange-500" />
+                  <span className="font-mono">ID: {activeMeet.uuid}</span>
+                </div>
+              </div>
+
+              {/* URL con botón de copiar */}
+              <div className="mb-4">
+                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                  Enlace de la reunión:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={activeMeet.url}
+                    readOnly
+                    className="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 font-mono"
+                  />
+                  <button
+                    onClick={handleCopyUrl}
+                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                    title="Copiar enlace"
+                  >
+                    <Copy size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleJoinMeet}
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <ExternalLink size={18} />
+                  Ingresar
+                </button>
+                <button
+                  onClick={handleEndMeet}
+                  className="px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
+                  title="Finalizar"
+                >
+                  <XCircle size={18} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </main>
