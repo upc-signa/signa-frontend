@@ -121,7 +121,9 @@ export default function Home() {
     }
 
     try {
-      const meet = await meetService.createNewMeet({});
+      const meet = await meetService.createNewMeet({
+        startTime: new Date().toISOString()
+      });
 
       const meetUrl = `${window.location.origin}/meet/${meet.uuid}`;
       await navigator.clipboard.writeText(meetUrl);
