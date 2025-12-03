@@ -10,26 +10,30 @@ export default function Settings() {
   const { theme, toggle } = useTheme();
   const isDark = theme === 'dark';
 
-  const [prefs, setPrefs] = useState({
-    dailyNotification: true,
-    preferredTime: '16:00',
-    autoSync: true,
+  // Cargar desde localStorage en el estado inicial
+  const [prefs, setPrefs] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      /* ignore */
+    }
+    // Si no hay nada guardado, usamos el default
+    return {
+      dailyNotification: true,
+      preferredTime: '16:00',
+      autoSync: true,
+    };
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setPrefs(p => ({ ...p, ...parsed }));
-      } catch {
-        /* ignore */
-      }
-    }
-  }, []);
-
-  useEffect(() => {
     localStorage.setItem(STORAGE, JSON.stringify(prefs));
+
+    window.dispatchEvent(
+      new CustomEvent("settings:prefsChanged", { detail: prefs })
+    );
   }, [prefs]);
 
   const flip = (key) => setPrefs(p => ({ ...p, [key]: !p[key] }));
@@ -47,11 +51,11 @@ export default function Settings() {
             <div className="uppercase text-xs tracking-widest text-orange-500 mb-1">Tema</div>
 
             <div className="flex items-center gap-4">
-                <Toggle
+              <Toggle
                 checked={isDark}
                 onChange={() => toggle()}
                 label={isDark ? 'Modo oscuro' : 'Modo claro'}
-                />
+              />
             </div>
           </div>
 
@@ -74,20 +78,21 @@ export default function Settings() {
               {/* Hora preferida */}
               <div className="text-sm flex items-center gap-2">
                 <span className="muted">Horario preferido:</span>
-                <select
-                  value={prefs.preferredTime}
-                  onChange={(e) => setPrefs(p => ({ ...p, preferredTime: e.target.value }))}
-                  className="select"
-                >
-                  {[
-                    '08:00', '09:00', '10:00', '11:00',
-                    '12:00', '13:00', '14:00', '15:00',
-                    '16:00', '17:00', '18:00', '19:00',
-                    '20:00', '21:00', '22:00'
-                  ].map(h => (
-                    <option key={h} value={h}>{h}</option>
-                  ))}
-                </select>
+                  <input
+                    type="time"
+                    value={prefs.preferredTime}
+                    onChange={(e) =>
+                      setPrefs(p => ({
+                        ...p,
+                        preferredTime: e.target.value.slice(0, 5),
+                      }))
+                    }
+                    disabled={!prefs.dailyNotification}
+                    className={`select transition ${
+                      !prefs.dailyNotification ? "opacity-40 cursor-not-allowed" : ""
+                    }`}
+                    step="900"
+                  />
               </div>
             </div>
           </div>
@@ -95,12 +100,12 @@ export default function Settings() {
           {/* Datos sincronizados */}
           <div className="mb-10">
             <div className="uppercase text-xs tracking-widest text-orange-500 mb-1">
-                Datos sincronizados
+              Datos sincronizados
             </div>
             <Toggle
-                checked={prefs.autoSync}
-                onChange={(v) => setPrefs(p => ({ ...p, autoSync: v }))}
-                label="Sincronización automática"
+              checked={prefs.autoSync}
+              onChange={(v) => setPrefs(p => ({ ...p, autoSync: v }))}
+              label="Sincronización automática"
             />
           </div>
 
