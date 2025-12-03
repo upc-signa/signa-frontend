@@ -69,7 +69,7 @@ export function usePlanExpiryNotice() {
           return;
         }
 
-        const windowDays = 30;
+        const windowDays = 32;
         // 4) Por vencer: hoy o en 0..windowDays
         if (typeof d === "number" && d >= 0 && d <= windowDays && !dismissed) {
           const msg =
