@@ -85,7 +85,7 @@ export default function MeetDetail({ meet, onClose }) {
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold mb-2">Detalle del Meet</h2>
-              <p className="text-orange-100">{formatDateTime(meet.createdAt)}</p>
+              <p className="text-orange-100">Inicio programado: {formatDateTime(meet.startTime || meet.createdAt)}</p>
             </div>
             <button
               onClick={onClose}
@@ -132,20 +132,36 @@ export default function MeetDetail({ meet, onClose }) {
             <span className={`px-3 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1.5 ${
               meet.isActive 
                 ? 'bg-green-400 text-white' 
-                : 'bg-orange-200 text-orange-900'
+                : (() => {
+                    // Verificar si la reunión aún no ha comenzado
+                    const now = new Date();
+                    const startTime = meet.startTime ? new Date(meet.startTime) : null;
+                    if (startTime && now < startTime) {
+                      return 'bg-blue-400 text-white';
+                    }
+                    return 'bg-orange-200 text-orange-900';
+                  })()
             }`}>
               {meet.isActive 
                 ? '🟢 Sesión Activa' 
-                : `⚫ Sesión Finalizada a las ${meet.endSessionTime ? ` ${(() => {
-                    const isoString = meet.endSessionTime.endsWith('Z') ? meet.endSessionTime : meet.endSessionTime + 'Z';
-                    const date = new Date(isoString);
-                    const peruDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
-                    return peruDate.toLocaleTimeString('es-PE', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      timeZone: 'UTC'
-                    });
-                  })()}` : ''}`
+                : (() => {
+                    // Verificar si la reunión aún no ha comenzado
+                    const now = new Date();
+                    const startTime = meet.startTime ? new Date(meet.startTime) : null;
+                    if (startTime && now < startTime) {
+                      return '🔵 Sesión Programada';
+                    }
+                    return `⚫ Sesión Finalizada${meet.endSessionTime ? ` a las ${(() => {
+                      const isoString = meet.endSessionTime.endsWith('Z') ? meet.endSessionTime : meet.endSessionTime + 'Z';
+                      const date = new Date(isoString);
+                      const peruDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
+                      return peruDate.toLocaleTimeString('es-PE', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        timeZone: 'UTC'
+                      });
+                    })()}` : ''}`;
+                  })()
               }
               {meet.isActive && (
                 <button

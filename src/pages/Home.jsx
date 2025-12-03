@@ -15,6 +15,7 @@ export default function Home() {
   const [activeMeet, setActiveMeet] = useState(null);
   const [meetDetails, setMeetDetails] = useState(null);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [showEndMeetDialog, setShowEndMeetDialog] = useState(false);
 
   useEffect(() => {
     loadSessionInfo();
@@ -170,10 +171,14 @@ export default function Home() {
 
   const handleEndMeet = () => {
     if (!activeMeet) return;
+    setShowEndMeetDialog(true);
+  };
 
+  const confirmEndMeet = () => {
     // Solo limpiar el estado local y localStorage (sin eliminar del backend)
     setActiveMeet(null);
     localStorage.removeItem('activeMeet');
+    setShowEndMeetDialog(false);
     toast.success('Sesión finalizada exitosamente', { toastId: 'meet-ended' });
   };
 
@@ -224,7 +229,7 @@ export default function Home() {
   const sessionsRemaining = isPremium ? '∞' : Math.max(0, maxSessions - sessionsUsed);
 
   return (
-    <main className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100 transition-colors duration-300">
+    <main className="h-full bg-zinc-50 text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100 transition-colors duration-300">
       <section className="max-w-6xl mx-auto px-4 py-12">
         {/* Banner de información de sesiones */}
         <div className="mb-8">
@@ -354,9 +359,21 @@ export default function Home() {
             <div className="card rounded-2xl shadow-lg p-6 bg-white dark:bg-gray-800 border-2 border-orange-200 w-full max-w-md">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <div className={`w-3 h-3 rounded-full animate-pulse ${
+                    (() => {
+                      if (!meetDetails?.startTime) return 'bg-green-500';
+                      const startTime = new Date(meetDetails.startTime.endsWith('Z') ? meetDetails.startTime : meetDetails.startTime + 'Z');
+                      const now = new Date();
+                      return now >= startTime ? 'bg-green-500' : 'bg-blue-500';
+                    })()
+                  }`}></div>
                   <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                    Sesión Activa
+                    {(() => {
+                      if (!meetDetails?.startTime) return 'Sesión Activa';
+                      const startTime = new Date(meetDetails.startTime.endsWith('Z') ? meetDetails.startTime : meetDetails.startTime + 'Z');
+                      const now = new Date();
+                      return now >= startTime ? 'Sesión Activa' : 'Sesión Programada';
+                    })()}
                   </h3>
                 </div>
                 <button
@@ -421,13 +438,6 @@ export default function Home() {
                   <ExternalLink size={18} />
                   Ingresar
                 </button>
-                <button
-                  onClick={handleEndMeet}
-                  className="px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
-                  title="Finalizar"
-                >
-                  <XCircle size={18} />
-                </button>
               </div>
             </div>
           )}
@@ -440,6 +450,34 @@ export default function Home() {
         onClose={() => setShowScheduleDialog(false)}
         onConfirm={handleScheduleMeet}
       />
+
+      {/* Diálogo de confirmación para finalizar sesión */}
+      {showEndMeetDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+              ¿Finalizar sesión?
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Esta acción finalizara la reunion y la removera de tu vista principal. La sesión seguirá disponible en el historial.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowEndMeetDialog(false)}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmEndMeet}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Finalizar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
