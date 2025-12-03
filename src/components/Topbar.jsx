@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { usePlanExpiryNotice } from "../hooks/usePlanExpiryNotice";
 import { formatDateLocal } from "../utils/planExpiry";
 import { useDailyFreeUsageNotice } from "../hooks/useDailyFreeUsageNotice";
+import { useIntroGuide } from "../hooks/useIntroGuide";
 
 function getUserInitial() {
   try {
@@ -37,6 +38,8 @@ export default function Topbar() {
   const userInitial = useMemo(getUserInitial, []);
   const planNotice = usePlanExpiryNotice(); // { loading, show, message, expired, daysLeft, endDate, dismissToday }
   const dailyNotice = useDailyFreeUsageNotice();
+
+  const { resetGuide } = useIntroGuide();
   useEffect(() => {
     (async () => {
       if (!profilePic) {
@@ -62,9 +65,13 @@ export default function Topbar() {
     };
     window.addEventListener("click", close);
 
+    const openUserFromTour = () => setOpenUser(true);
+    window.addEventListener("tour:openUserMenu", openUserFromTour);
+
     return () => {
       window.removeEventListener("click", close);
       window.removeEventListener("avatar:changed", onAvatarChanged);
+      window.removeEventListener("tour:openUserMenu", openUserFromTour);
     };
   }, [profilePic]);
 
@@ -159,6 +166,7 @@ export default function Topbar() {
               className="flex items-center gap-1 bg-white/30 hover:bg-white/40 px-2 py-1 rounded-full"
               aria-haspopup="menu"
               type="button"
+              data-tour-id="user-menu"
             >
               {profilePic ? (
                 <img
@@ -178,6 +186,7 @@ export default function Topbar() {
               <div className="absolute right-0 mt-2 w-44 bg-white text-gray-800 rounded-lg shadow-lg overflow-hidden z-20">
                 <Link
                   to="/profile"
+                  data-tour-id="profile"
                   className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50"
                   onClick={() => setOpenUser(false)}
                 >
@@ -185,6 +194,7 @@ export default function Topbar() {
                 </Link>
                 <Link
                   to="/history"
+                  data-tour-id="history"
                   className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50"
                   onClick={() => setOpenUser(false)}
                 >
@@ -197,6 +207,14 @@ export default function Topbar() {
                 >
                   <Cog size={16} /> Configuración
                 </Link>
+                <button
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50"
+                  onClick={() => {
+                    resetGuide();
+                  }}
+                >
+                  🛈 Ver guía inicial
+                </button>
                 <button
                   type="button"
                   onClick={authService.logout}
