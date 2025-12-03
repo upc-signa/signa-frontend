@@ -39,7 +39,7 @@ export default function Settings() {
   const flip = (key) => setPrefs(p => ({ ...p, [key]: !p[key] }));
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-8">
+    <main className="max-w-5xl mx-auto px-4 py-8" data-tour-id="settings-page">
       <h1 className="text-3xl font-extrabold text-orange-500 mb-6">Configuración</h1>
 
       <div className="relative">

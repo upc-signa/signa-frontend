@@ -378,7 +378,8 @@ export default function Home() {
           <div className="flex justify-center">
             <button
               type="button"
-              className={`group flex flex-col items-center gap-2 ${!canCreate && !isPremium ? 'opacity-50 cursor-not-allowed' : ''
+              data-tour-id="translation"
+            className={`group flex flex-col items-center gap-2 ${!canCreate && !isPremium ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               onClick={handleCreateMeet}
               disabled={!canCreate && !isPremium}
