@@ -59,144 +59,6 @@ export default function History() {
 
   const loadHistory = async () => {
     try {
-      // Datos simulados para pruebas (comentar/descomentar según necesites)
-      const mockData = [
-        {
-          id: 1,
-          uuid: 'abc123-def456-ghi789',
-          createdAt: '2024-11-26T10:30:00Z',
-          endSessionTime: '2024-11-26T11:15:00Z',
-          isActive: false,
-          messageCount: 5,
-          messages: [
-            {
-              id: 1,
-              senderName: 'Juan Pérez',
-              messageType: 'CHAT',
-              content: 'Hola, ¿cómo están todos?',
-              sentAt: '2024-11-26T10:31:00Z'
-            },
-            {
-              id: 2,
-              senderName: 'María López',
-              messageType: 'SIGN',
-              content: 'Buenos días, estoy usando lenguaje de señas',
-              sentAt: '2024-11-26T10:32:00Z'
-            },
-            {
-              id: 3,
-              senderName: 'Sistema',
-              messageType: 'SUBTITLE',
-              content: 'Subtítulo generado automáticamente para esta reunión',
-              sentAt: '2024-11-26T10:33:00Z'
-            },
-            {
-              id: 4,
-              senderName: 'Carlos Ruiz',
-              messageType: 'CHAT',
-              content: 'Perfecto, todos conectados',
-              sentAt: '2024-11-26T10:35:00Z'
-            },
-            {
-              id: 5,
-              senderName: 'Juan Pérez',
-              messageType: 'CHAT',
-              content: 'Excelente, comencemos con la reunión',
-              sentAt: '2024-11-26T10:36:00Z'
-            }
-          ]
-        },
-        {
-          id: 2,
-          uuid: 'xyz789-uvw456-rst123',
-          createdAt: '2024-11-25T14:20:00Z',
-          endSessionTime: '2024-11-25T15:45:00Z',
-          isActive: false,
-          messageCount: 3,
-          messages: [
-            {
-              id: 6,
-              senderName: 'Ana García',
-              messageType: 'SIGN',
-              content: 'Hola equipo, usando señas para comunicarme',
-              sentAt: '2024-11-25T14:21:00Z'
-            },
-            {
-              id: 7,
-              senderName: 'Pedro Sánchez',
-              messageType: 'CHAT',
-              content: 'Entendido, gracias por la información',
-              sentAt: '2024-11-25T14:25:00Z'
-            },
-            {
-              id: 8,
-              senderName: 'Sistema',
-              messageType: 'SUBTITLE',
-              content: 'Esta es una transcripción automática del audio',
-              sentAt: '2024-11-25T14:30:00Z'
-            }
-          ]
-        },
-        {
-          id: 3,
-          uuid: 'lmn456-opq789-abc012',
-          createdAt: '2024-11-26T09:00:00Z',
-          endSessionTime: null,
-          isActive: true,
-          messageCount: 7,
-          messages: [
-            {
-              id: 9,
-              senderName: 'Laura Martínez',
-              messageType: 'CHAT',
-              content: 'Buenos días a todos',
-              sentAt: '2024-11-26T09:01:00Z'
-            },
-            {
-              id: 10,
-              senderName: 'Roberto Torres',
-              messageType: 'SIGN',
-              content: 'Saludos desde el lenguaje de señas',
-              sentAt: '2024-11-26T09:02:00Z'
-            },
-            {
-              id: 11,
-              senderName: 'Sistema',
-              messageType: 'SUBTITLE',
-              content: 'Iniciando transcripción de audio en tiempo real',
-              sentAt: '2024-11-26T09:03:00Z'
-            },
-            {
-              id: 12,
-              senderName: 'Laura Martínez',
-              messageType: 'CHAT',
-              content: 'Vamos a discutir los puntos del proyecto',
-              sentAt: '2024-11-26T09:05:00Z'
-            },
-            {
-              id: 13,
-              senderName: 'Roberto Torres',
-              messageType: 'CHAT',
-              content: 'Perfecto, estoy listo para comenzar',
-              sentAt: '2024-11-26T09:06:00Z'
-            },
-            {
-              id: 14,
-              senderName: 'Sofía Ramírez',
-              messageType: 'SIGN',
-              content: 'También estoy conectada por señas',
-              sentAt: '2024-11-26T09:07:00Z'
-            },
-            {
-              id: 15,
-              senderName: 'Laura Martínez',
-              messageType: 'CHAT',
-              content: 'Excelente, todos presentes',
-              sentAt: '2024-11-26T09:08:00Z'
-            }
-          ]
-        }
-      ];
 
       // Descomentar esta línea para usar datos reales del backend
       const data = await historyService.getHistory();
@@ -427,27 +289,43 @@ export default function History() {
                 >
                   <div className="mb-4">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                      📅 {formatDate(meet.createdAt)}
+                      📅 {formatDate(meet.startTime || meet.createdAt)}
                     </p>
                     
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${
                         meet.isActive 
                           ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                          : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                          : (() => {
+                              // Verificar si la reunión aún no ha comenzado
+                              const now = new Date();
+                              const startTime = meet.startTime ? new Date(meet.startTime) : null;
+                              if (startTime && now < startTime) {
+                                return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                              }
+                              return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+                            })()
                       }`}>
                         {meet.isActive 
                           ? '🟢 Activa' 
-                          : `⚫ Finalizada${meet.endSessionTime ? `: ${(() => {
-                              const isoString = meet.endSessionTime.endsWith('Z') ? meet.endSessionTime : meet.endSessionTime + 'Z';
-                              const date = new Date(isoString);
-                              const peruDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
-                              return peruDate.toLocaleTimeString('es-PE', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                timeZone: 'UTC'
-                              });
-                            })()}` : ''}`
+                          : (() => {
+                              // Verificar si la reunión aún no ha comenzado
+                              const now = new Date();
+                              const startTime = meet.startTime ? new Date(meet.startTime) : null;
+                              if (startTime && now < startTime) {
+                                return '🔵 Programada';
+                              }
+                              return `⚫ Finalizada${meet.endSessionTime ? `: ${(() => {
+                                const isoString = meet.endSessionTime.endsWith('Z') ? meet.endSessionTime : meet.endSessionTime + 'Z';
+                                const date = new Date(isoString);
+                                const peruDate = new Date(date.getTime() - (5 * 60 * 60 * 1000));
+                                return peruDate.toLocaleTimeString('es-PE', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  timeZone: 'UTC'
+                                });
+                              })()}` : ''}`;
+                            })()
                         }
                         {meet.isActive && (
                           <button
