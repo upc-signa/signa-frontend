@@ -9,18 +9,20 @@ export default function ScheduleMeetDialog({ isOpen, onClose, onConfirm }) {
 
   useEffect(() => {
     if (isOpen) {
-      // Configurar fecha y hora mínima (ahora)
+      // Configurar fecha y hora mínima (ahora en hora local)
       const now = new Date();
-      const peruDate = new Date(now.getTime() - (5 * 60 * 60 * 1000)); // UTC-5 para Perú
       
-      // Formato para input date: YYYY-MM-DD
-      const dateString = peruDate.toISOString().split('T')[0];
+      // Formato para input date: YYYY-MM-DD (en hora local)
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
       setMinDate(dateString);
       setSelectedDate(dateString);
       
-      // Formato para input time: HH:MM
-      const hours = String(peruDate.getUTCHours()).padStart(2, '0');
-      const minutes = String(peruDate.getUTCMinutes()).padStart(2, '0');
+      // Formato para input time: HH:MM (en hora local)
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
       const timeString = `${hours}:${minutes}`;
       setMinTime(timeString);
       setSelectedTime(timeString);
@@ -32,13 +34,19 @@ export default function ScheduleMeetDialog({ isOpen, onClose, onConfirm }) {
       return;
     }
 
-    // Combinar fecha y hora en formato ISO para Perú (UTC-5)
+    // El input date/time ya está en hora local del navegador
+    // Crear la fecha combinando año, mes, día, hora y minutos
     const [year, month, day] = selectedDate.split('-');
     const [hours, minutes] = selectedTime.split(':');
     
-    // Crear fecha en hora de Perú y convertir a UTC
-    const peruDate = new Date(year, month - 1, day, hours, minutes);
-    const utcDate = new Date(peruDate.getTime() + (5 * 60 * 60 * 1000)); // Convertir a UTC
+    // Crear fecha en hora local (esto ya considera la zona horaria del navegador)
+    const localDate = new Date(year, month - 1, day, hours, minutes);
+    
+    // Convertir a UTC para enviar al backend
+    const utcDate = new Date(localDate.getTime());
+    
+    console.log('📅 Fecha seleccionada (local):', localDate.toString());
+    console.log('🌐 Fecha convertida (UTC):', utcDate.toISOString());
     
     onConfirm(utcDate.toISOString());
   };
@@ -126,7 +134,7 @@ export default function ScheduleMeetDialog({ isOpen, onClose, onConfirm }) {
           <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
             <p className="text-sm text-orange-800 dark:text-orange-300">
               💡 <strong>Nota:</strong> La reunión se creará con la fecha y hora seleccionadas.
-              Podrás compartir el enlace con los participantes. La duracion de la reunion es de 30 minutos.
+              Podrás compartir el enlace con los participantes.
             </p>
           </div>
         </div>

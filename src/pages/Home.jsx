@@ -23,23 +23,18 @@ export default function Home() {
     if (savedMeet) {
       try {
         const meetData = JSON.parse(savedMeet);
-        // Validar que la sesión aún esté activa en el backend
-        meetService.validateMeet(meetData.id)
-          .then((validation) => {
-            if (validation.isActive) {
-              setActiveMeet(meetData);
-              // Cargar detalles completos del meet
-              loadMeetDetails(meetData.id);
-            } else {
-              // La sesión ya no está activa, limpiar localStorage
-              localStorage.removeItem('activeMeet');
-              toast.info('La sesión guardada ya no está activa', { toastId: 'session-inactive' });
-            }
+        // Verificar que la sesión aún exista en el backend
+        meetService.getMeetById(meetData.id)
+          .then((details) => {
+            // La sesión existe, cargarla
+            setActiveMeet(meetData);
+            setMeetDetails(details);
           })
           .catch((error) => {
-            console.error('Error al validar sesión:', error);
-            // Si hay error (ej: sesión eliminada), limpiar localStorage
+            console.error('Error al cargar sesión guardada:', error);
+            // Si hay error (sesión eliminada), limpiar localStorage
             localStorage.removeItem('activeMeet');
+            toast.info('La sesión guardada ya no existe', { toastId: 'session-not-found' });
           });
       } catch (error) {
         console.error('Error al recuperar sesión activa:', error);
@@ -52,18 +47,27 @@ export default function Home() {
   useEffect(() => {
     if (!activeMeet) return;
 
-    // Verificar cada 30 segundos si la sesión sigue activa
+    // Verificar cada 30 segundos si la sesión sigue existiendo
     const interval = setInterval(async () => {
       try {
-        const validation = await meetService.validateMeet(activeMeet.id);
-        if (!validation.isActive) {
-          setActiveMeet(null);
-          localStorage.removeItem('activeMeet');
-          toast.warning('La sesión ha sido finalizada', { toastId: 'session-ended' });
+        const details = await meetService.getMeetById(activeMeet.id);
+        // Actualizar detalles en caso de cambios
+        setMeetDetails(details);
+        
+        // Verificar si la sesión ya expiró
+        if (details.endSessionTime) {
+          const endTime = new Date(details.endSessionTime);
+          const now = new Date();
+          if (now > endTime) {
+            // La sesión ya expiró
+            setActiveMeet(null);
+            localStorage.removeItem('activeMeet');
+            toast.warning('La sesión ha expirado', { toastId: 'session-expired' });
+          }
         }
       } catch (error) {
-        // Si hay error, probablemente la sesión fue eliminada
-        console.error('Error al validar sesión:', error);
+        // Si hay error 404, probablemente la sesión fue eliminada
+        console.error('Error al verificar sesión:', error);
         setActiveMeet(null);
         localStorage.removeItem('activeMeet');
         toast.warning('La sesión ya no está disponible', { toastId: 'session-unavailable' });
@@ -131,6 +135,10 @@ export default function Home() {
       const meet = await meetService.createNewMeet({
         startTime: startTime
       });
+
+      console.log('✅ Meet creado - Respuesta del backend:', meet);
+      console.log('📅 startTime:', meet.startTime);
+      console.log('⏰ endSessionTime:', meet.endSessionTime);
 
       const meetUrl = `${window.location.origin}/meet/${meet.uuid}`;
       await navigator.clipboard.writeText(meetUrl);
@@ -378,7 +386,7 @@ export default function Home() {
                 {meetDetails && (
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <Clock size={16} className="text-orange-500" />
-                    <span>Fin programado: {meetDetails.endSessionTime ? formatTime(meetDetails.endSessionTime) : 'No definido'}</span>
+                    <span>Fin programado: {meetDetails.endSessionTime ? formatTime(meetDetails.endSessionTime) : 'Indefinido'}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
