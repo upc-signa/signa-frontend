@@ -40,7 +40,7 @@ export default function ProfileView() {
 
   return (
     <>
-      <main className="max-w-5xl mx-auto px-4 py-10">
+      <main className="max-w-5xl mx-auto px-4 py-10" data-tour-id="profile-page">
         <h1 className="text-3xl font-black text-orange-500 mb-6">Perfil</h1>
 
         <div className="relative">

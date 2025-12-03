@@ -329,6 +329,7 @@ export default function Home() {
         <div className="flex items-start justify-center gap-8 py-16 flex-wrap">
           <button
             type="button"
+            data-tour-id="translation"
             className={`group flex flex-col items-center gap-2 ${!canCreate && !isPremium ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             onClick={handleCreateMeet}
