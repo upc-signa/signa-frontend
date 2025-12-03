@@ -6,6 +6,7 @@ import { profileService } from "../services/api/profile.service";
 import { toast } from "react-toastify";
 import { usePlanExpiryNotice } from "../hooks/usePlanExpiryNotice";
 import { formatDateLocal } from "../utils/planExpiry";
+import { useDailyFreeUsageNotice } from "../hooks/useDailyFreeUsageNotice";
 
 function getUserInitial() {
   try {
@@ -35,6 +36,7 @@ export default function Topbar() {
 
   const userInitial = useMemo(getUserInitial, []);
   const planNotice = usePlanExpiryNotice(); // { loading, show, message, expired, daysLeft, endDate, dismissToday }
+  const dailyNotice = useDailyFreeUsageNotice();
   useEffect(() => {
     (async () => {
       if (!profilePic) {
@@ -87,14 +89,15 @@ export default function Topbar() {
               type="button"
             >
               <Bell size={18} />
-                {planNotice.show && !planNotice.loading && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-white rounded-full" />
-                )}
+              {(planNotice.show || dailyNotice.show) && !planNotice.loading && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-white rounded-full" />
+              )}
             </button>
 
             {openNotif && (
-              <div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 rounded-lg shadow-lg p-2 z-20">
-                {planNotice.show ? (
+              <div className="absolute right-0 mt-2 w-72 bg-white text-gray-800 rounded-lg shadow-lg p-2 z-20 space-y-2">
+                {/* Notificación de plan */}
+                {planNotice.show && (
                   <div className="p-2 rounded border border-orange-200 bg-orange-50">
                     <div className="flex items-start gap-2">
                       <div className="mt-1"><Bell size={14} /></div>
@@ -110,25 +113,40 @@ export default function Topbar() {
                         )}
                       </div>
                     </div>
-                    {/* <div className="mt-2 flex gap-2">
-                      <Link
-                        to="/plans"
-                        className="text-xs px-2 py-1 rounded bg-orange-500 text-white hover:bg-orange-600"
-                        onClick={() => setOpenNotif(false)}
-                      >
-                        Ver planes
-                      </Link>
+                  </div>
+                )}
+
+                {/* Notificación de uso diario (FREE) */}
+                {dailyNotice.show && (
+                  <div className="p-2 rounded border border-blue-200 bg-blue-50">
+                    <div className="flex items-start gap-2">
+                      <div className="mt-1"><Bell size={14} /></div>
+                      <div className="text-sm leading-snug">
+                        <div className="font-semibold text-blue-700">
+                          Recordatorio diario
+                        </div>
+                        <div className="text-gray-700">
+                          {dailyNotice.message}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex gap-2">
                       <button
                         type="button"
-                        onClick={() => { planNotice.dismissToday(); setOpenNotif(false); }}
+                        onClick={() => { dailyNotice.dismissToday(); setOpenNotif(false); }}
                         className="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50"
                       >
-                        Descartar por hoy
+                        Recordármelo mañana
                       </button>
-                    </div> */}
+                    </div>
                   </div>
-                ) : (
-                  <div className="p-2 text-xs text-gray-500">No tienes notificaciones.</div>
+                )}
+
+                {/* Si no hay ninguna de las dos */}
+                {!planNotice.show && !dailyNotice.show && (
+                  <div className="p-2 text-xs text-gray-500">
+                    No tienes notificaciones.
+                  </div>
                 )}
               </div>
             )}
