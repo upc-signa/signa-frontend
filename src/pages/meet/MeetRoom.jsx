@@ -101,22 +101,25 @@ export default function MeetRoom() {
         // Si aún no ha comenzado, mostrar sala de espera
         const startTime = meet.startTime ? new Date(meet.startTime) : null;
         if (startTime && now < startTime) {
-            const timeUntilStart = Math.ceil((startTime - now) / 1000 / 60); // minutos
+            // El startTime viene en UTC, necesitamos convertir explícitamente a hora de Perú
+            // Restar 5 horas para convertir de UTC a Perú (UTC-5)
+            const peruTime = new Date(startTime.getTime() - (5 * 60 * 60 * 1000));
             
-            // Formatear fecha y hora para Perú
-            const formattedDate = startTime.toLocaleDateString('es-PE', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                timeZone: 'America/Lima'
-            });
+            // Calcular tiempo restante usando la hora de Perú
+            const timeUntilStart = Math.ceil((peruTime - now) / 1000 / 60); // minutos
             
-            const formattedTime = startTime.toLocaleTimeString('es-PE', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-                timeZone: 'America/Lima'
-            });
+            // Formatear manualmente para evitar problemas de timezone
+            const year = peruTime.getFullYear();
+            const month = String(peruTime.getMonth() + 1).padStart(2, '0');
+            const day = String(peruTime.getDate()).padStart(2, '0');
+            const formattedDate = `${day}/${month}/${year}`;
+            
+            let hours = peruTime.getHours();
+            const minutes = String(peruTime.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // La hora '0' debe ser '12'
+            const formattedTime = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
             
             return (
                 <div className="h-screen flex flex-col items-center justify-center bg-black text-white p-4">

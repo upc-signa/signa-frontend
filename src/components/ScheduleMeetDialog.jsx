@@ -45,9 +45,6 @@ export default function ScheduleMeetDialog({ isOpen, onClose, onConfirm }) {
     // Convertir a UTC para enviar al backend
     const utcDate = new Date(localDate.getTime());
     
-    console.log('📅 Fecha seleccionada (local):', localDate.toString());
-    console.log('🌐 Fecha convertida (UTC):', utcDate.toISOString());
-    
     onConfirm(utcDate.toISOString());
   };
 

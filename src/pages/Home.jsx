@@ -113,7 +113,6 @@ export default function Home() {
   const loadMeetDetails = async (meetId) => {
     try {
       const details = await meetService.getMeetById(meetId);
-      console.log('Meet details:', details); // Debug: ver qué devuelve el backend
       setMeetDetails(details);
     } catch (error) {
       console.error('Error al cargar detalles del meet:', error);
@@ -135,10 +134,6 @@ export default function Home() {
       const meet = await meetService.createNewMeet({
         startTime: startTime
       });
-
-      console.log('✅ Meet creado - Respuesta del backend:', meet);
-      console.log('📅 startTime:', meet.startTime);
-      console.log('⏰ endSessionTime:', meet.endSessionTime);
 
       const meetUrl = `${window.location.origin}/meet/${meet.uuid}`;
       await navigator.clipboard.writeText(meetUrl);
@@ -381,12 +376,12 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <Clock size={16} className="text-orange-500" />
-                  <span>Inicio: {meetDetails?.createdAt ? formatTime(meetDetails.createdAt) : formatTime(activeMeet.createdAt)}</span>
+                  <span>Inicio programado: {meetDetails?.startTime ? formatTime(meetDetails.startTime) : (activeMeet.startTime ? formatTime(activeMeet.startTime) : 'No definido')}</span>
                 </div>
-                {meetDetails && (
+                {meetDetails && meetDetails.endSessionTime && (
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <Clock size={16} className="text-orange-500" />
-                    <span>Fin programado: {meetDetails.endSessionTime ? formatTime(meetDetails.endSessionTime) : 'Indefinido'}</span>
+                    <span>Fin programado: {formatTime(meetDetails.endSessionTime)}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
