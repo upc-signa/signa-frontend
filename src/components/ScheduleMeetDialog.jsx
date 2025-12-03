@@ -67,7 +67,7 @@ export default function ScheduleMeetDialog({ isOpen, onClose, onConfirm }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 h-screen bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 h-screen bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-hidden">
       <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full relative shadow-2xl">
         {/* Header */}
         <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">

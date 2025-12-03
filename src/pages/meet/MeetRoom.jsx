@@ -131,7 +131,7 @@ export default function MeetRoom() {
                             Comienza en aproximadamente {timeUntilStart} minuto{timeUntilStart !== 1 ? 's' : ''}
                         </p>
                         <div className="text-sm text-gray-500 mb-6">
-                            Hora de inicio: {formattedDate} a las {formattedTime}
+                            Inicio programado: {formattedDate} a las {formattedTime}
                         </div>
                         <button
                             onClick={() => navigate('/')}
