@@ -174,12 +174,21 @@ export default function Home() {
     setShowEndMeetDialog(true);
   };
 
-  const confirmEndMeet = () => {
-    // Solo limpiar el estado local y localStorage (sin eliminar del backend)
-    setActiveMeet(null);
-    localStorage.removeItem('activeMeet');
-    setShowEndMeetDialog(false);
-    toast.success('Sesión finalizada exitosamente', { toastId: 'meet-ended' });
+  const confirmEndMeet = async () => {
+    try {
+      // Finalizar la sesión en el backend
+      await meetService.endMeet(activeMeet.id);
+      
+      // Limpiar el estado local y localStorage
+      setActiveMeet(null);
+      localStorage.removeItem('activeMeet');
+      setShowEndMeetDialog(false);
+      toast.success('Sesión finalizada exitosamente', { toastId: 'meet-ended' });
+    } catch (error) {
+      console.error('Error al finalizar sesión:', error);
+      toast.error('Error al finalizar la sesión', { toastId: 'meet-end-error' });
+      setShowEndMeetDialog(false);
+    }
   };
 
   const handleCopyUrl = async () => {
@@ -459,7 +468,7 @@ export default function Home() {
               ¿Finalizar sesión?
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Esta acción finalizara la reunion y la removera de tu vista principal. La sesión seguirá disponible en el historial.
+              Esta acción finalizará la reunión y la removerá de tu vista principal. Los detalles de sesión estarán disponibles en el historial.
             </p>
             <div className="flex gap-3 justify-end">
               <button
