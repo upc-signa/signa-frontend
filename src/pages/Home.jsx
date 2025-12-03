@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { meetService } from '../services/api/meet.service';
 import { planService } from '../services/api/plan.service';
+import ScheduleMeetDialog from '../components/ScheduleMeetDialog';
 
 export default function Home() {
   const [sessionsUsed, setSessionsUsed] = useState(0);
@@ -13,6 +14,7 @@ export default function Home() {
   const [canCreate, setCanCreate] = useState(true);
   const [activeMeet, setActiveMeet] = useState(null);
   const [meetDetails, setMeetDetails] = useState(null);
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
 
   useEffect(() => {
     loadSessionInfo();
@@ -114,15 +116,20 @@ export default function Home() {
     }
   };
 
-  const handleCreateMeet = async () => {
+  const handleCreateMeet = () => {
     if (!canCreate && !isPremium) {
       toast.warning('Has alcanzado el límite de sesiones diarias. Actualiza a Premium para sesiones ilimitadas.', { toastId: 'session-limit' });
       return;
     }
 
+    // Abrir el diálogo de programación
+    setShowScheduleDialog(true);
+  };
+
+  const handleScheduleMeet = async (startTime) => {
     try {
       const meet = await meetService.createNewMeet({
-        startTime: new Date().toISOString()
+        startTime: startTime
       });
 
       const meetUrl = `${window.location.origin}/meet/${meet.uuid}`;
@@ -150,6 +157,9 @@ export default function Home() {
         setSessionsUsed(newSessionsUsed);
         setCanCreate(remaining > 0);
       }
+
+      // Cerrar el diálogo
+      setShowScheduleDialog(false);
     } catch {
       toast.error('Error al crear la sesión', { toastId: 'create-meet-error' });
     }
@@ -420,6 +430,13 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Diálogo de programación de reunión */}
+      <ScheduleMeetDialog
+        isOpen={showScheduleDialog}
+        onClose={() => setShowScheduleDialog(false)}
+        onConfirm={handleScheduleMeet}
+      />
     </main>
   );
 }
