@@ -12,6 +12,7 @@ export default function ProfileView() {
   const [profile, setProfile] = useState(null);
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -19,6 +20,7 @@ export default function ProfileView() {
         const user = await profileService.getMyProfile();
         setProfile(user);
         const currentPlan = await planService.getCurrentPlan().catch(() => null);
+        console.log('PLAN DESDE BACK:', currentPlan); // 👈 debug
         setPlan(currentPlan);
       } catch {
         toast.error('Error al cargar la información del perfil');
@@ -28,15 +30,44 @@ export default function ProfileView() {
     })();
   }, []);
 
+  function subtractOneDay(dateString) {
+    const d = new Date(dateString);
+    d.setDate(d.getDate() - 1);
+    return d;
+  }
+
+  // handler para cancelar la renovación automática
+  const handleCancelRenewal = async () => {
+    try {
+      setCancelling(true);
+      const updatedProfile = await planService.cancelAutoRenewal();
+
+      setProfile(updatedProfile);
+      if (updatedProfile.plan) {
+        setPlan(updatedProfile.plan);
+      }
+
+      toast.success(
+        'La renovación automática ha sido cancelada. Tu plan seguirá activo hasta la fecha de vencimiento.'
+      );
+    } catch (err) {
+      toast.error(
+        'No se pudo cancelar la renovación automática. Inténtalo de nuevo más tarde.'
+      );
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   if (loading) return <div className="p-10 text-gray-500">Cargando…</div>;
   if (!profile) return <div className="p-10 text-red-500">No se encontró el perfil.</div>;
 
   const isPremium = plan?.planType === 'PREMIUM' && plan?.active;
 
   const daysLeft =
-   plan && typeof plan?.endDate === 'string' ? daysUntil(plan.endDate) : null;
+    plan && typeof plan?.endDate === 'string' ? daysUntil(plan.endDate) : null;
   const showDaysLeft =
-   plan && plan.planType === 'PREMIUM' && !plan.expired && typeof daysLeft === 'number';
+    plan && plan.planType === 'PREMIUM' && !plan.expired && typeof daysLeft === 'number';
 
   return (
     <>
@@ -61,7 +92,9 @@ export default function ProfileView() {
                 </div>
 
                 <div className="mb-4">
-                  <div className="uppercase text-xs tracking-widest text-orange-500">Fecha de nacimiento</div>
+                  <div className="uppercase text-xs tracking-widest text-orange-500">
+                    Fecha de nacimiento
+                  </div>
                   <div className="text-sm border-b border-soft pb-1">{profile.birthDate}</div>
                 </div>
 
@@ -73,7 +106,9 @@ export default function ProfileView() {
                 </div>
 
                 <div className="mb-4">
-                  <div className="uppercase text-xs tracking-widest text-orange-500">Tamaño de texto</div>
+                  <div className="uppercase text-xs tracking-widest text-orange-500">
+                    Tamaño de texto
+                  </div>
                   <div className="text-sm border-b border-soft pb-1">
                     {profile.textSize === 'GRANDE' ? 'Grande' : 'Normal'}
                   </div>
@@ -118,11 +153,14 @@ export default function ProfileView() {
                   </p>
                   <p>
                     <span className="font-semibold">Inicio:</span>{' '}
-                    {formatDateLocal(plan.startDate) || '—'}
+                    {formatDateLocal(subtractOneDay(plan.startDate))}
                   </p>
                   <p>
                     <span className="font-semibold">Fin:</span>{' '}
-                    {plan.planType === 'FREE' || new Date(plan.endDate).getFullYear() - new Date(plan.startDate).getFullYear() > 100
+                    {plan.planType === 'FREE' ||
+                    new Date(plan.endDate).getFullYear() -
+                      new Date(plan.startDate).getFullYear() >
+                      100
                       ? 'Sin vencimiento'
                       : formatDateLocal(plan.endDate) || '—'}
                   </p>
@@ -143,6 +181,29 @@ export default function ProfileView() {
                       Tu plan ha vencido. Renueva para mantener el acceso.
                     </p>
                   )}
+
+                  {/* Bloque de renovación automática */}
+                  {isPremium && !plan.expired && (
+                    <div className="sm:col-span-2 mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <p className="text-sm text-orange-800">
+                        {plan.autoRenew
+                          ? <>La renovación automática está <strong>activada</strong>. Tu plan se renovará al finalizar el periodo actual.</>
+                          : <>La renovación automática está <strong>desactivada</strong>. Tu plan se mantendrá activo hasta la fecha de fin.</>
+                        }
+                      </p>
+
+                      {plan.autoRenew && (
+                        <button
+                          type="button"
+                          onClick={handleCancelRenewal}
+                          disabled={cancelling}
+                          className="bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-semibold px-4 py-2 rounded-lg whitespace-nowrap"
+                        >
+                          {cancelling ? 'Cancelando…' : 'Cancelar renovación'}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-xs text-gray-500">Aún no hay información de plan.</div>
@@ -151,7 +212,6 @@ export default function ProfileView() {
 
             {!isPremium && (
               <div className="mt-8">
-                <div className="text-sm text-gray-600 mb-3">Te quedan 5 sesiones restantes.</div>
                 <Link
                   to="/plans"
                   className="block text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg shadow"
